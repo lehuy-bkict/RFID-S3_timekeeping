@@ -1,0 +1,49 @@
+.header-navbar {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  padding: 0.6rem 0;
+  background: linear-gradient(90deg, #0f172a 0%, #1d4ed8 100%);
+
+  .brand {
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #fff !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    letter-spacing: 0.02em;
+
+    &:hover {
+      text-decoration: none;
+      color: #e2e8f0 !important;
+    }
+  }
+
+  .brand-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .navbar-nav {
+    .nav-link {
+      color: #dbeafe !important;
+      font-weight: 500;
+      margin-left: 0.5rem;
+      transition: color 0.2s ease, border-color 0.2s ease;
+      border-bottom: 2px solid transparent;
+      padding-bottom: 0.3rem;
+
+      &:hover {
+        color: #fff !important;
+      }
+
+      &.active {
+        color: #fff !important;
+        border-bottom-color: #fff;
+      }
+    }
+  }
+
+  .navbar-toggler {
+    border-color: rgba(255,255,255,0.35);
+  }
+}

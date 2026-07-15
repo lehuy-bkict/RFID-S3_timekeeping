@@ -1,0 +1,25 @@
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: 40px 20px;
+
+  .spinner {
+    margin-bottom: 20px;
+
+    .spinner-border {
+      width: 3rem;
+      height: 3rem;
+      border: 0.3em solid #0d6efd;
+      border-right-color: transparent;
+    }
+  }
+
+  .loading-text {
+    font-size: 1rem;
+    color: #666;
+    margin: 0;
+  }
+}
