@@ -2,7 +2,6 @@
 
 const mqtt = require('mqtt');
 require('dotenv').config();
-const { getIO } = require('../base_socketIO/init.socket'); 
 
 const client = mqtt.connect(process.env.MQTT_HOST);
 
@@ -19,16 +18,6 @@ client.on('connect', () => {
 
 client.on('message', (topic, message) => {
   console.log(`[MQTT] ${topic}: ${message.toString()}`);
-
-  try {
-    const data = JSON.parse(message.toString());
-
-    const io = getIO();
-    io.emit('rfid-scan', data);  
-
-  } catch (err) {
-    console.error('JSON parse error:', err.message);
-  }
 });
 
 client.on('error', (err) => {

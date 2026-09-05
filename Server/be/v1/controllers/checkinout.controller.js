@@ -77,8 +77,10 @@ class InfoCheckInOutModel {
             ispass: parking.ispass,
             deviceID: parking.deviceID,
             info: {
-                CheckIn: parking.info.CheckIn,
-                CheckOut: parking.info.CheckOut
+                CheckIn: parking.info?.CheckIn,
+                CheckInImage: parking.info?.CheckInImage || null,
+                CheckOut: parking.info?.CheckOut,
+                CheckOutImage: parking.info?.CheckOutImage || null
             },
             CreateTime: parking.CreateTime
         }));

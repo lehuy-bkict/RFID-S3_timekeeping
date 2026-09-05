@@ -23,9 +23,15 @@ const InfoCheckInOutSchema = new Schema({
             type: Date,
             //required: true
         },
+        CheckInImage: {
+            type: String
+        },
         CheckOut: {
             type: Date,
             //required: true
+        },
+        CheckOutImage: {
+            type: String
         }
     },
     CreateTime: {

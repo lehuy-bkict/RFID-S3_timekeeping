@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import Table3 from '../../../default/table/table.3/index';
-import { FaBarcode } from "react-icons/fa6";
-import Barcode from "react-barcode";
+import { FaQrcode } from "react-icons/fa6";
+import { QRCodeSVG } from "qrcode.react";
 
-const TableCheckInRealtime = ({ currentPage, currentItems, totalPages, searchName, handlePagination, limit, handleChangeLimit, refreshData }) => {
+const TableCheckInRealtime = ({ currentPage, currentItems, totalPages, searchName, handlePagination, limit, handleChangeLimit }) => {
   const [showModal, setShowModal] = useState(false);
-  const [modalBarcode, setModalBarcode] = useState("");
-  const [modalCheckin, setModalCheckin] = useState("");
-  const [modalCheckout, setModalCheckout] = useState("");
+  const [selectedItem, setSelectedItem] = useState(null);
 
   const highlightText = (text, searchTerm) => {
     if (!text || !searchTerm || typeof text !== 'string') return text;
@@ -27,52 +25,29 @@ const TableCheckInRealtime = ({ currentPage, currentItems, totalPages, searchNam
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
 
-  // Tính tiền gửi xe
-  const calcParkingFee = (checkin, checkout) => {
-    if (!checkin || !checkout) return "Not eligible";
-    const inTime = new Date(checkin);
-    const outTime = new Date(checkout);
-    const diffMs = outTime - inTime;
-    if (isNaN(diffMs) || diffMs <= 0) return "Not eligible";
-    const diffMin = diffMs / 60000;
-    if (diffMin < 10) return "$0";
-    // Đã quá 10 phút
-    let fee = 5000;
-    const diffH = diffMs / (1000 * 60 * 60);
-    if (diffH > 12) {
-      // Mỗi 12h tăng thêm 10k
-      const extra = Math.ceil((diffH - 12) / 12);
-      fee += extra * 10000;
-    }
-    return "$" + fee.toLocaleString('en-US');
-  };
-
   // Đảm bảo currentItems luôn là mảng
   const safeItems = Array.isArray(currentItems) ? currentItems : [];
 
   const titleArr = [
-    'No.', 'Card number', 'Device ID', 'Status', 'Check-in time', 'Check-out time', 'Action'
+    'No.', 'Card number', 'Device ID', 'Time', 'Action'
   ];
 
   const actionArr = [
     {
-      icon: <FaBarcode className="icon-black" />,
-      title: "View barcode",
+      icon: <FaQrcode className="icon-black" style={{ fontSize: "1.2rem", cursor: "pointer" }} />,
+      title: "Scan QR Code & View Details",
       callback: (e, data) => {
-        const item = safeItems.find(i => i.rfid === data.id);
-        setModalBarcode(data.id);
+        const item = safeItems.find(i => i.id === data.id);
+        setSelectedItem(item || null);
         setShowModal(true);
-        setModalCheckin(item?.checkin || "");
-        setModalCheckout(item?.checkout || "");
       },
       isVisible: true,
     }
   ];
 
   const dataArr = safeItems.map((item, index) => {
-    const status = item.checkout ? "Left the parking lot" : "Inside the parking lot";
     return {
-      id: item.rfid,
+      id: item.id,
       stt: index + 1 + (currentPage - 1) * limit,
       rfid: (
         <div dangerouslySetInnerHTML={{ __html: highlightText(item.rfid, searchName) }} />
@@ -80,17 +55,21 @@ const TableCheckInRealtime = ({ currentPage, currentItems, totalPages, searchNam
       device: (
         <div dangerouslySetInnerHTML={{ __html: highlightText(item.device, searchName) }} />
       ),
-      status: (
-        <div dangerouslySetInnerHTML={{ __html: highlightText(status, searchName) }} />
-      ),
-      checkin: (
-        <div dangerouslySetInnerHTML={{ __html: highlightText(formatDateTime(item.checkin), searchName) }} />
-      ),
-      checkout: (
-        <div dangerouslySetInnerHTML={{ __html: highlightText(item.checkout ? formatDateTime(item.checkout) : '', searchName) }} />
+      time: (
+        <div dangerouslySetInnerHTML={{ __html: highlightText(formatDateTime(item.time), searchName) }} />
       ),
     };
   });
+
+  // Unique QR payload string
+  const getQrValue = (item) => {
+    if (!item) return "";
+    return JSON.stringify({
+      cardNumber: item.rfid,
+      device: item.device,
+      time: item.time
+    });
+  };
 
   return (
     <div>
@@ -110,13 +89,14 @@ const TableCheckInRealtime = ({ currentPage, currentItems, totalPages, searchNam
           <p>Waiting for data from the server...</p>
         )}
       </div>
-      {/* Modal hiển thị barcode và tiền gửi xe */}
-      {showModal && (
+
+      {/* Modal Popup hiển thị QR Code + Thông tin + 1 Ảnh duy nhất */}
+      {showModal && selectedItem && (
         <div
           style={{
             position: "fixed",
             top: 0, left: 0, right: 0, bottom: 0,
-            background: "rgba(0,0,0,0.3)",
+            background: "rgba(0,0,0,0.5)",
             zIndex: 9999,
             display: "flex",
             alignItems: "center",
@@ -128,24 +108,50 @@ const TableCheckInRealtime = ({ currentPage, currentItems, totalPages, searchNam
             style={{
               background: "#fff",
               padding: 24,
-              borderRadius: 8,
-              minWidth: 320,
-              minHeight: 120,
-              textAlign: "center",
+              borderRadius: 12,
+              maxWidth: 480,
+              width: "92%",
+              maxHeight: "90vh",
+              overflowY: "auto",
               position: "relative"
             }}
             onClick={e => e.stopPropagation()}
           >
-            <h5>Barcode</h5>
-            <div style={{ margin: "24px 0" }}>
-              {modalBarcode && (
-                <Barcode value={modalBarcode} width={2} height={80} fontSize={18} />
-              )}
+            <h5 className="text-center mb-3">Scan Details & QR Code</h5>
+
+            {/* QR Code section */}
+            <div className="d-flex justify-content-center my-3 p-3 style-qr-wrapper" style={{ background: "#f8f9fa", borderRadius: 8 }}>
+              <QRCodeSVG value={getQrValue(selectedItem)} size={140} level="H" />
             </div>
-            <div style={{ margin: "12px 0", fontWeight: "bold" }}>
-              Parking fee: {calcParkingFee(modalCheckin, modalCheckout)}
+
+            {/* Info details table */}
+            <div className="card mb-3">
+              <div className="card-body p-3 text-start" style={{ fontSize: "14px", lineHeight: "1.8" }}>
+                <div><strong>Card Number:</strong> {selectedItem.rfid}</div>
+                <div><strong>Device ID:</strong> {selectedItem.device}</div>
+                <div><strong>Time:</strong> {formatDateTime(selectedItem.time) || "N/A"}</div>
+              </div>
             </div>
-            <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Close</button>
+
+            {/* Single Captured Photo */}
+            <div className="mb-3">
+              <h6 className="text-start mb-2">Captured Photo</h6>
+              <div className="border p-2 rounded text-center" style={{ background: "#fafafa" }}>
+                {(selectedItem.image || selectedItem.checkinImage || selectedItem.checkoutImage) ? (
+                  <img
+                    src={selectedItem.image || selectedItem.checkinImage || selectedItem.checkoutImage}
+                    alt="Captured Scan Event"
+                    style={{ width: "100%", maxHeight: "300px", objectFit: "contain", borderRadius: 4 }}
+                  />
+                ) : (
+                  <span className="text-muted d-block py-4" style={{ fontSize: "12px" }}>No photo available</span>
+                )}
+              </div>
+            </div>
+
+            <div className="text-center mt-3">
+              <button className="btn btn-secondary px-4" onClick={() => setShowModal(false)}>Close</button>
+            </div>
           </div>
         </div>
       )}
