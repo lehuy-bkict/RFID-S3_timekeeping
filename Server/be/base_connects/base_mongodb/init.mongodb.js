@@ -10,27 +10,37 @@ class Database {
     }
     //Connect
     connect(type = 'mongodb') {
-        mongoose.connect(`mongodb://${process.env.DATABASE_HOST}/${process.env.DATABASE_QUERY}?retryWrites=true&w=majority`).then(_ => {
-            console.log('Connected Mongodb Success')
-        });
-        // this.con = mongoose.createConnection(process.env.API_HOST);
+        const host = process.env.DATABASE_HOST || '127.0.0.1:27017';
+        const query = process.env.DATABASE_QUERY || 'ESP32';
+        const mongoUri = `mongodb://${host}/${query}?retryWrites=true&w=majority`;
 
-        // this.con.on("error", function(err){
-        //     console.log("Mongoose connection error: " + err);
-        //     return
-        // });
-        // this.con.on("disconnected", function(){
-        //     return
-        // });
+        mongoose.connection.on('connected', () => {
+            console.log(`[MongoDB] Connected successfully to ${host}/${query}`);
+        });
+
+        mongoose.connection.on('error', (err) => {
+            console.error('[MongoDB] Runtime connection error:', err.message);
+        });
+
+        mongoose.connection.on('disconnected', () => {
+            console.warn('[MongoDB] Disconnected. Reconnecting...');
+        });
+
+        mongoose.connect(mongoUri, {
+            serverSelectionTimeoutMS: 5000,
+        }).then(() => {
+            console.log('Connected Mongodb Success');
+        }).catch((err) => {
+            console.error('[MongoDB] Initial connection error:', err.message);
+        });
         
         process.on('unhandledRejection', function (err) {
             if ('MongoError' === err.name) {
                 console.log('unhandledRejection: ' + err.message);
-                return
+                return;
             }
-            return
+            return;
         });
-        // this.db = this.con.useDb(`${process.env.DATABASE}`);
     }
     // instance
     static getInstance() {

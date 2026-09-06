@@ -3,21 +3,12 @@ import { LineChart, Line, PieChart, Pie, XAxis, YAxis, CartesianGrid, Tooltip, L
 import './home.scss';
 import { GetData } from '../../../../service/apiAdmin/ApiAreaService';
 
-function Home() {
-    // Hàm lấy ngày hôm nay và ngày hôm sau
-    const getToday = () => {
-        const today = new Date();
-        return today.toISOString().split('T')[0];
-    };
-    const getTomorrow = () => {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        return tomorrow.toISOString().split('T')[0];
-    };
+import DateRangePicker from './DateRangePicker';
 
-    // State for default entry/exit dates today and tomorrow
-    const [entryDate, setEntryDate] = useState(getToday());
-    const [exitDate, setExitDate] = useState(getTomorrow());
+function Home() {
+    // State for default entry/exit dates - default empty to fetch all historical data
+    const [entryDate, setEntryDate] = useState('');
+    const [exitDate, setExitDate] = useState('');
     const [stats, setStats] = useState({
         xeVao: 0,
         xeRa: 0,
@@ -25,8 +16,8 @@ function Home() {
     });
     const [trafficData, setTrafficData] = useState([]);
     const [cardDistribution, setCardDistribution] = useState([
-        { name: 'Xe vào', value: 0 },
-        { name: 'Xe ra', value: 0 },
+        { name: 'Entry', value: 0 },
+        { name: 'Exit', value: 0 },
     ]);
 
     useEffect(() => {
@@ -38,17 +29,18 @@ function Home() {
         setTrafficData([]);
 
         const fetchData = async () => {
-            const fromdate = entryDate;
-            const todate = exitDate;
+            const params = {};
+            if (entryDate) params.fromDate = entryDate;
+            if (exitDate) params.toDate = exitDate;
             try {
-                const res = await GetData({ fromDate:fromdate, toDate: todate });
+                const res = await GetData(params);
                 const data = Array.isArray(res.data.data) ? res.data.data : [];
 
                 // Count records that have both CheckIn and CheckOut values
                 const xeVao = data.filter(item => item.info?.CheckIn).length;
                 const xeRa = data.filter(item => item.info?.CheckOut).length;
                 const thietBiSet = new Set(data.map(item => item.deviceID).filter(Boolean));
-                // Count vehicles still inside the parking lot (ispass === false)
+                // Count vehicles still Inside (ispass === false)
                 const xeTrongNhaXe = data.filter(item => item.ispass === false).length;
 
                 // Aggregate statistics by day
@@ -56,13 +48,13 @@ function Home() {
                 data.forEach(item => {
                     if (item.info?.CheckIn) {
                         const date = new Date(item.info.CheckIn);
-                        const label = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}-${date.getDate().toString().padStart(2,'0')}`;
+                        const label = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
                         if (!dailyMap[label]) dailyMap[label] = { time: label, entry: 0, exit: 0 };
                         dailyMap[label].entry++;
                     }
                     if (item.info?.CheckOut) {
                         const date = new Date(item.info.CheckOut);
-                        const label = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}-${date.getDate().toString().padStart(2,'0')}`;
+                        const label = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
                         if (!dailyMap[label]) dailyMap[label] = { time: label, entry: 0, exit: 0 };
                         dailyMap[label].exit++;
                     }
@@ -97,23 +89,20 @@ function Home() {
 
     return (
         <div className="dashboard-container">
+            <div className="page-header">
+                <h3 className="page-title">Dashboard Overview</h3>
+            </div>
             <div className="stats-grid">
-                <div className="stat-card">
-                    <h3>Entry time</h3>
-                    <input
-                        type="date"
-                        value={entryDate}
-                        onChange={e => setEntryDate(e.target.value)}
-                        className="stat-dropdown"
-                    />
-                </div>
-                <div className="stat-card">
-                    <h3>Exit time</h3>
-                    <input
-                        type="date"
-                        value={exitDate}
-                        onChange={e => setExitDate(e.target.value)}
-                        className="stat-dropdown"
+                <div className="stat-card date-range-card">
+                    <h3>Entry & Exit time</h3>
+                    <DateRangePicker
+                        startDate={entryDate}
+                        endDate={exitDate}
+                        onChange={({ startDate, endDate }) => {
+                            setEntryDate(startDate);
+                            setExitDate(endDate);
+                        }}
+                        maxDays={30}
                     />
                 </div>
                 <div className="stat-card">
@@ -133,7 +122,7 @@ function Home() {
                     <div className="stat-value">{stats.xeTrongNhaXe}</div>
                 </div>
             </div>
-            
+
             <div className="charts-container">
                 <div className="chart-card">
                     <h3>Traffic by day</h3>

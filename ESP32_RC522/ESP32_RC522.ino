@@ -10,6 +10,8 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);
 
 const char* ssid = "Lhhuy";
 const char* password = "0961163347";
+const char* ssid_backup = "APS LAB";
+const char* password_backup = "Vim#0343222666";
 const char* mqtt_server = "broker.hivemq.com";
 const int mqtt_port = 1883;
 const char* mqtt_topic = "esp32/rfid/data";
@@ -29,15 +31,57 @@ String getCurrentTime() {
 }
 
 void setup_wifi() {
+  // Connect to primary Wi-Fi
+  Serial.print("Connecting to primary WiFi: ");
+  Serial.println(ssid);
   WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
+
+  unsigned long startedAt = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - startedAt < 15000) {
     delay(500);
+    Serial.print(".");
+  }
+
+  // Fall back to secondary Wi-Fi if primary connection fails
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("\nFailed to connect to primary WiFi. Connecting to backup WiFi: ");
+    Serial.println(ssid_backup);
+    WiFi.disconnect();
+    delay(500);
+    WiFi.begin(ssid_backup, password_backup);
+
+    startedAt = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - startedAt < 15000) {
+      delay(500);
+      Serial.print(".");
+    }
+  }
+
+  Serial.println();
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.print("WiFi Connected to: ");
+    Serial.println(WiFi.SSID());
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println("Could not connect to any WiFi network!");
   }
 }
 
 void reconnect() {
   while (!client.connected()) {
-    client.connect("ESP32Client");
+    if (WiFi.status() != WL_CONNECTED) {
+      setup_wifi();
+      if (WiFi.status() != WL_CONNECTED) {
+        delay(2000);
+        continue;
+      }
+    }
+    if (client.connect("ESP32Client")) {
+      Serial.println("MQTT connected");
+      break;
+    }
+    delay(2000);
   }
 }
 

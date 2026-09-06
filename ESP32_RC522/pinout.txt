@@ -1,0 +1,8 @@
+RC522 Pin    ESP32 GPIO Pin    Function
+SDA (SS)     GPIO 5            SPI Chip Select
+SCK          GPIO 18           SPI Clock
+MOSI         GPIO 23           SPI Master Out Slave In
+MISO         GPIO 19           SPI Master In Slave Out
+RST          GPIO 22           Reset
+GND          GND               Ground
+3.3V         3.3V              Power Supply (3.3V only)

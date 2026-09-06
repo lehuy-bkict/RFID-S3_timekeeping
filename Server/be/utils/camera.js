@@ -7,6 +7,11 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+const axios = require('axios');
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://127.0.0.1:5000';
+
+const jpegQuality = Math.min(95, Math.max(10, Number(process.env.CAMERA_JPEG_QUALITY || 40)));
+
 // Default webcam configuration
 const webcamOptions = {
   width: 1280,
@@ -20,11 +25,9 @@ const webcamOptions = {
 const Webcam = NodeWebcam.create(webcamOptions);
 
 /**
- * Captures a photo using the server's connected webcam, compresses it to ~10-20KB,
- * and returns it as a lightweight Base64 string.
- * @returns {Promise<string|null>} Compressed Base64 image string (data:image/jpeg;base64,...) or null if capture fails
+ * Fallback snapshot using node-webcam
  */
-function capturePhotoBase64() {
+function captureLegacyPhotoBase64() {
   return new Promise((resolve) => {
     const tempFileName = path.join(os.tmpdir(), `rfid_cam_${Date.now()}`);
 
@@ -62,10 +65,11 @@ function capturePhotoBase64() {
           sharpInput = sharp(rawBuffer);
         }
 
-        // Resize & compress JPEG image to 480px width, quality 45 (~10KB - 20KB Base64 size)
+        // Resize image to width 640px preserving aspect ratio and high quality for AI face verification
         const compressedBuffer = await sharpInput
-          .resize({ width: 480, withoutEnlargement: true })
-          .jpeg({ quality: 45, progressive: true })
+          .rotate()
+          .resize(640, null, { withoutEnlargement: true })
+          .jpeg({ quality: 90, progressive: true })
           .toBuffer();
 
         const base64Data = `data:image/jpeg;base64,${compressedBuffer.toString('base64')}`;
@@ -81,6 +85,22 @@ function capturePhotoBase64() {
       }
     });
   });
+}
+
+/**
+ * Captures a photo using the server's open camera via AI service, with legacy fallback.
+ * @returns {Promise<string|null>}
+ */
+async function capturePhotoBase64() {
+  try {
+    const response = await axios.get(`${AI_SERVICE_URL}/camera/snapshot`, { timeout: 2000 });
+    if (response?.data?.success && response.data.image) {
+      return response.data.image;
+    }
+  } catch (err) {
+    // AI service camera snapshot unavailable, fallback
+  }
+  return captureLegacyPhotoBase64();
 }
 
 module.exports = {

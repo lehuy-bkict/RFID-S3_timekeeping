@@ -6,3 +6,4 @@ dist/
 *.log
 .DS_Store
 Thumbs.db
+Server/be/AI_model/models/

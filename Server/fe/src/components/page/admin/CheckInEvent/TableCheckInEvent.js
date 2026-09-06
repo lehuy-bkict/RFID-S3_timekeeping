@@ -35,7 +35,7 @@ const TableCheckInEvent = ({ currentItems, searchName, currentPage, totalPages, 
         }
         if (window.confirm(`Are you sure you want to delete ${DataId}?`)) {
             try {
-                const response = await DeleteData({ _id: DataId }); 
+                const response = await DeleteData({ _id: DataId });
                 if (response?.data?.success) {
                     toast.success("Deleted successfully!");
                     refreshData();
@@ -57,7 +57,7 @@ const TableCheckInEvent = ({ currentItems, searchName, currentPage, totalPages, 
     };
 
     const titleArr = [
-        'No.', 'Card number', 'Device ID', 'Status', 'Check-in time', 'Check-out time', 'Created at', 'Action'
+        'No.', 'User', 'Card number', 'Device ID', 'Status', 'Check-in time', 'Check-out time', 'Created at', 'Action'
     ];
 
     const actionArr = [
@@ -70,32 +70,46 @@ const TableCheckInEvent = ({ currentItems, searchName, currentPage, totalPages, 
         {
             icon: <MdDelete className="icon-black" />,
             title: "Delete",
-            callback: (e, data) => handleDelete(data.id), 
+            callback: (e, data) => handleDelete(data.id),
             isVisible: true,
         }
     ];
 
     // Xử lý dữ liệu bảng
-    const dataArr = Array.isArray(currentItems) ? currentItems.map((item, index) => ({
-        id: item._id,
-        stt: index + 1 + (currentPage - 1) * limit,
-        cardNumber: (
-            <div dangerouslySetInnerHTML={{ __html: highlightText(item.cardNumber, searchName) }} />
-        ),
-        deviceID: (
-            <div dangerouslySetInnerHTML={{ __html: highlightText(item.deviceID, searchName) }} />
-        ),
-        isPass: item.ispass ? "Left the parking lot" : "Inside the parking lot",
-        checkInTime: (
-            <div dangerouslySetInnerHTML={{ __html: highlightText(formatDateTime(item.info?.CheckIn || ""), searchName) }} />
-        ),
-        checkOutTime: item.info?.CheckOut ? (
-            <div dangerouslySetInnerHTML={{ __html: highlightText(formatDateTime(item.info.CheckOut), searchName) }} />
-        ) : "Not yet checked out",
-        createTime: (
-            <div dangerouslySetInnerHTML={{ __html: highlightText(formatDateTime(item.CreateTime || ""), searchName) }} />
-        ),
-    })) : []; 
+    const dataArr = Array.isArray(currentItems) ? currentItems.map((item, index) => {
+        const isClient = !item.userName || item.userName.toLowerCase() === 'client';
+        return {
+            id: item._id,
+            stt: index + 1 + (currentPage - 1) * limit,
+            userName: (
+                isClient ? (
+                    <span className="badge bg-secondary px-2 py-1" style={{ fontSize: "12px", textTransform: "lowercase" }}>
+                        client
+                    </span>
+                ) : (
+                    <span className="badge bg-primary px-2 py-1" style={{ fontSize: "12px" }}>
+                        <span dangerouslySetInnerHTML={{ __html: highlightText(item.userName, searchName) }} />
+                    </span>
+                )
+            ),
+            cardNumber: (
+                <div dangerouslySetInnerHTML={{ __html: highlightText(item.cardNumber, searchName) }} />
+            ),
+            deviceID: (
+                <div dangerouslySetInnerHTML={{ __html: highlightText(item.deviceID, searchName) }} />
+            ),
+            isPass: item.ispass ? "Outside" : "Inside",
+            checkInTime: (
+                <div dangerouslySetInnerHTML={{ __html: highlightText(formatDateTime(item.info?.CheckIn || ""), searchName) }} />
+            ),
+            checkOutTime: item.info?.CheckOut ? (
+                <div dangerouslySetInnerHTML={{ __html: highlightText(formatDateTime(item.info.CheckOut), searchName) }} />
+            ) : "Not yet checked out",
+            createTime: (
+                <div dangerouslySetInnerHTML={{ __html: highlightText(formatDateTime(item.CreateTime || ""), searchName) }} />
+            ),
+        };
+    }) : [];
 
     return (
         <>
@@ -138,6 +152,21 @@ const TableCheckInEvent = ({ currentItems, searchName, currentPage, totalPages, 
                     >
                         <h5>Check-in / Check-out Photos</h5>
 
+                        <div className="mb-2 text-start p-2 rounded bg-light small">
+                            <div>
+                                <strong>User: </strong>
+                                {selectedItem?.userName && selectedItem.userName.toLowerCase() !== 'client' ? (
+                                    <span className="badge bg-primary ms-1">{selectedItem.userName}</span>
+                                ) : (
+                                    <span className="badge bg-secondary ms-1">client</span>
+                                )}
+                            </div>
+                            <div><strong>Card Number:</strong> {selectedItem?.cardNumber}</div>
+                            {selectedItem?.similarity !== null && selectedItem?.similarity !== undefined && (
+                                <div><strong>AI Similarity:</strong> {Number(selectedItem.similarity).toFixed(3)}</div>
+                            )}
+                        </div>
+
                         {/* Navigation Tabs */}
                         <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', margin: '16px 0' }}>
                             <button
@@ -166,7 +195,7 @@ const TableCheckInEvent = ({ currentItems, searchName, currentPage, totalPages, 
                                     {selectedItem?.info?.CheckInImage ? (
                                         <img
                                             src={selectedItem.info.CheckInImage}
-                                            alt="Check-in Photo"
+                                            alt="Check-in snapshot"
                                             style={{ width: "100%", maxHeight: "340px", objectFit: "contain", borderRadius: 6, border: "1px solid #ddd" }}
                                         />
                                     ) : (
@@ -183,7 +212,7 @@ const TableCheckInEvent = ({ currentItems, searchName, currentPage, totalPages, 
                                     {selectedItem?.info?.CheckOutImage ? (
                                         <img
                                             src={selectedItem.info.CheckOutImage}
-                                            alt="Check-out Photo"
+                                            alt="Check-out snapshot"
                                             style={{ width: "100%", maxHeight: "340px", objectFit: "contain", borderRadius: 6, border: "1px solid #ddd" }}
                                         />
                                     ) : (

@@ -2,6 +2,7 @@
 
 const express = require('express');
 const app = express();
+const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const server = http.createServer(app);
@@ -36,13 +37,17 @@ require('./base_connects/base_mongodb/init.mongodb');
 
 app.use('/', require('./routers/index'));
 
-app.use(express.static(path.join(__dirname, 'build')));
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+const buildDir = path.join(__dirname, 'build');
+const indexHtml = path.join(buildDir, 'index.html');
+
+app.use(express.static(buildDir));
+app.get('*', (req, res, next) => {
+  if (fs.existsSync(indexHtml)) {
+    return res.sendFile(indexHtml);
+  }
+  return next();
 });
 
-require('./base_connects/base_mqtt/init.mqtt');
-require('./v1/device');
 
 // Middleware bắt lỗi
 app.use((req, res, next) => {
@@ -52,6 +57,9 @@ app.use((req, res, next) => {
 });
 
 app.use((error, req, res, next) => {
+  if (res.headersSent) {
+    return next(error);
+  }
   const statusCode = error.status || 500;
   return res.status(statusCode).json({
     status: 'error',

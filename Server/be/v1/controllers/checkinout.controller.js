@@ -2,6 +2,28 @@ const { Types } = require('mongoose');
 const { CheckInEventService } = require('../services/checkinout.service');
 const { decryptString } = require('../../utils/checkapikey.js');
 
+function parseDateStart(dStr) {
+    if (!dStr) return null;
+    const parts = String(dStr).trim().split('-');
+    if (parts.length === 3) {
+        return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 0, 0, 0, 0);
+    }
+    const d = new Date(dStr);
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
+
+function parseDateEnd(dStr) {
+    if (!dStr) return null;
+    const parts = String(dStr).trim().split('-');
+    if (parts.length === 3) {
+        return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
+    }
+    const d = new Date(dStr);
+    d.setHours(23, 59, 59, 999);
+    return d;
+}
+
 class InfoCheckInOutModel {
    async GetData(req, res) {
   // Get API key
@@ -58,38 +80,42 @@ class InfoCheckInOutModel {
             query.ispass = ispass;
         }
 
-        const startDate = fromDate ? new Date(fromDate) : new Date(0);
-        const endDate = toDate ? new Date(toDate) : new Date(); 
+        const hasFrom = fromDate && typeof fromDate === 'string' && fromDate.trim() && !isNaN(Date.parse(fromDate));
+        const hasTo = toDate && typeof toDate === 'string' && toDate.trim() && !isNaN(Date.parse(toDate));
 
-        query["info.CheckIn"] = { $gte: startDate, $lte: endDate };
-
-        if (toDate) {
-            query["$or"] = [
-                { "info.CheckOut": { $lte: endDate } },
-                { "info.CheckOut": null }
-            ];
+        if (hasFrom || hasTo) {
+            query["info.CheckIn"] = {};
+            if (hasFrom) {
+                query["info.CheckIn"].$gte = parseDateStart(fromDate);
+            }
+            if (hasTo) {
+                query["info.CheckIn"].$lte = parseDateEnd(toDate);
+            }
         }
 
-        const lstParking = await CheckInEventService.getby(query);
-        const returnParking = lstParking.map(parking => ({
-            _id: parking._id,
-            cardNumber: parking.cardNumber,
-            ispass: parking.ispass,
-            deviceID: parking.deviceID,
+        const records = await CheckInEventService.getby(query);
+        const attendanceRecords = records.map(item => ({
+            _id: item._id,
+            cardNumber: item.cardNumber,
+            userName: item.userName || 'client',
+            verificationStatus: item.verificationStatus || 'UNASSIGNED_CLIENT',
+            similarity: item.similarity ?? null,
+            ispass: item.ispass,
+            deviceID: item.deviceID,
             info: {
-                CheckIn: parking.info?.CheckIn,
-                CheckInImage: parking.info?.CheckInImage || null,
-                CheckOut: parking.info?.CheckOut,
-                CheckOutImage: parking.info?.CheckOutImage || null
+                CheckIn: item.info?.CheckIn,
+                CheckInImage: item.info?.CheckInImage || null,
+                CheckOut: item.info?.CheckOut,
+                CheckOutImage: item.info?.CheckOutImage || null
             },
-            CreateTime: parking.CreateTime
+            CreateTime: item.CreateTime
         }));
 
         return res.send({
             success: true,
             messages: "",
             error: "",
-            data: returnParking
+            data: attendanceRecords
         });
     } catch (Exception) {
             console.log(Exception);

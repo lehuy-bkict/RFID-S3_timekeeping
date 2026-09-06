@@ -1,0 +1,11 @@
+.face-verification {
+  .face-image-card { border-radius: 12px; }
+  .image-dropzone { min-height: 285px; width: 100%; border: 2px dashed #bfdbfe; border-radius: 10px; background: #eff6ff; color: #475569; overflow: hidden; cursor: pointer; padding: 0; }
+  .image-dropzone img { display: block; width: 100%; height: 285px; object-fit: contain; background: #0f172a; }
+  .threshold-control { min-width: 260px; }
+  .result-card { border-left: 5px solid; }
+  .result-card.matched { border-color: #198754; background: #f0fdf4; }
+  .result-card.not-matched { border-color: #dc3545; background: #fff7f7; }
+  .result-badge { padding: .55rem .75rem; letter-spacing: .04em; }
+  .score { min-width: 150px; .score div { font-size: 2.25rem; font-weight: 700; line-height: 1.2; } }
+}

@@ -29,7 +29,7 @@ const TableCheckInRealtime = ({ currentPage, currentItems, totalPages, searchNam
   const safeItems = Array.isArray(currentItems) ? currentItems : [];
 
   const titleArr = [
-    'No.', 'Card number', 'Device ID', 'Time', 'Action'
+    'No.', 'User', 'Card number', 'Device ID', 'Time', 'Action'
   ];
 
   const actionArr = [
@@ -46,9 +46,21 @@ const TableCheckInRealtime = ({ currentPage, currentItems, totalPages, searchNam
   ];
 
   const dataArr = safeItems.map((item, index) => {
+    const isClient = !item.userName || item.userName.toLowerCase() === 'client';
     return {
       id: item.id,
       stt: index + 1 + (currentPage - 1) * limit,
+      userName: (
+        isClient ? (
+          <span className="badge bg-secondary px-2 py-1" style={{ fontSize: "12px", textTransform: "lowercase" }}>
+            client
+          </span>
+        ) : (
+          <span className="badge bg-primary px-2 py-1" style={{ fontSize: "12px" }}>
+            <span dangerouslySetInnerHTML={{ __html: highlightText(item.userName, searchName) }} />
+          </span>
+        )
+      ),
       rfid: (
         <div dangerouslySetInnerHTML={{ __html: highlightText(item.rfid, searchName) }} />
       ),
@@ -65,6 +77,7 @@ const TableCheckInRealtime = ({ currentPage, currentItems, totalPages, searchNam
   const getQrValue = (item) => {
     if (!item) return "";
     return JSON.stringify({
+      user: item.userName || 'client',
       cardNumber: item.rfid,
       device: item.device,
       time: item.time
@@ -127,9 +140,20 @@ const TableCheckInRealtime = ({ currentPage, currentItems, totalPages, searchNam
             {/* Info details table */}
             <div className="card mb-3">
               <div className="card-body p-3 text-start" style={{ fontSize: "14px", lineHeight: "1.8" }}>
+                <div>
+                  <strong>User: </strong>
+                  {selectedItem.userName && selectedItem.userName.toLowerCase() !== 'client' ? (
+                    <span className="badge bg-primary ms-1">{selectedItem.userName}</span>
+                  ) : (
+                    <span className="badge bg-secondary ms-1">client</span>
+                  )}
+                </div>
                 <div><strong>Card Number:</strong> {selectedItem.rfid}</div>
                 <div><strong>Device ID:</strong> {selectedItem.device}</div>
                 <div><strong>Time:</strong> {formatDateTime(selectedItem.time) || "N/A"}</div>
+                {selectedItem.similarity !== null && selectedItem.similarity !== undefined && (
+                  <div><strong>AI Similarity:</strong> {Number(selectedItem.similarity).toFixed(3)} (Matched profile photo)</div>
+                )}
               </div>
             </div>
 

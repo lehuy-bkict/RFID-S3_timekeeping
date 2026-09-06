@@ -2,8 +2,10 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8999/api/V1/Developer';
 
+const DEFAULT_API_KEY = 'U2FsdGVkX1907NZ7/0RwlZtL7Llqkc7sig13nyAtorVdkM+UtLnZV37TiT3LG+GR';
+
 const getApiKey = () => {
-  return localStorage.getItem('apiKey') || '';
+  return localStorage.getItem('apiKey') || DEFAULT_API_KEY;
 };
 
 const api = axios.create({

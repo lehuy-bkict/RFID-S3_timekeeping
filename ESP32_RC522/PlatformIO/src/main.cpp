@@ -10,6 +10,8 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);
 
 const char* ssid = "Lhhuy";
 const char* password = "0961163347";
+const char* ssid_backup = "APS LAB";
+const char* password_backup = "Vim#0343222666";
 const char* mqtt_server = "broker.hivemq.com";
 const int mqtt_port = 1883;
 const char* mqtt_topic = "esp32/rfid/data";
@@ -34,16 +36,37 @@ void setup_wifi() {
   WiFi.setAutoReconnect(true);
   WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE,
               IPAddress(8, 8, 8, 8), IPAddress(1, 1, 1, 1));
+
+  // Connect to primary Wi-Fi
+  Serial.print("Connecting to primary WiFi: ");
+  Serial.println(ssid);
   WiFi.begin(ssid, password);
 
   unsigned long startedAt = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - startedAt < 20000) {
+  while (WiFi.status() != WL_CONNECTED && millis() - startedAt < 15000) {
     delay(500);
     Serial.print(".");
   }
 
+  // Fall back to secondary Wi-Fi if primary connection fails
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("\nFailed to connect to primary WiFi. Connecting to backup WiFi: ");
+    Serial.println(ssid_backup);
+    WiFi.disconnect();
+    delay(500);
+    WiFi.begin(ssid_backup, password_backup);
+
+    startedAt = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - startedAt < 15000) {
+      delay(500);
+      Serial.print(".");
+    }
+  }
+
   Serial.println();
   if (WiFi.status() == WL_CONNECTED) {
+    Serial.print("WiFi Connected to: ");
+    Serial.println(WiFi.SSID());
     Serial.print("WiFi IP: ");
     Serial.println(WiFi.localIP());
     Serial.print("DNS: ");
