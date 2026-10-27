@@ -121,11 +121,12 @@ const TableCheckInRealtime = ({ currentPage, currentItems, totalPages, searchNam
             style={{
               background: "#fff",
               padding: 24,
-              borderRadius: 12,
+              borderRadius: 14,
               maxWidth: 480,
               width: "92%",
               maxHeight: "90vh",
               overflowY: "auto",
+              boxShadow: "0 12px 32px rgba(0, 0, 0, 0.2)",
               position: "relative"
             }}
             onClick={e => e.stopPropagation()}

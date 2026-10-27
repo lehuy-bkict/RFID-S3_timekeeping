@@ -1,217 +1,248 @@
-:root {
-    /* --primary-color: rgb(25, 118, 210); */
-    --primary-color: rgb(255, 255, 255);
-    --primary-gray-500: #adb5bd;
-    --primary-gray-400: #ced4da;
-    --primary-gray-200: #e9ecef;
-    --primary-color-disable: #f8f8f8;
-    --primary-color-blue: #0747a6;
-    --primary-color-green: #34bfa3;
-    --primary-color-lightGreen: #bee5eb;
-    --primary-color-light-lightGreen: #eff9fd;
-  
-    --font-title-100: 13px;
-    --font-title-135: 13.5px;
-    --font-title-200: 14px;
-    --text-color: #4a4a4a;
-    --text-placeholer-color: #969696;
-    --font-size-title-page: 1.55rem;
-    --font-weight-title-page: 500;
-    --font-weight-button: 500;
+/* Dashboard Root Layout - Material Kit React */
+.minimal-dashboard-root {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-default);
+  position: relative;
+  width: 100%;
+}
+
+/* Desktop Sidebar Wrapper */
+.desktop-sidebar-wrapper {
+  display: block;
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.collapsed {
+    width: var(--sidebar-collapsed-width, 88px);
   }
-  
-  .row-app {
-    margin: 0 !important;
+
+  @media (max-width: 1023px) {
+    display: none;
   }
-  
-  .imput-text {
-    width: 100%;
-    outline: none;
-    border: none;
-    border-bottom: 1px solid var(--primary-gray-500);
-    padding: 0 4px;
-    font-size: 15px;
-  
-    &::placeholder {
-      font-style: italic;
-      color: var(--primary-gray-500);
+}
+
+/* Mobile Drawer Overlay */
+.mobile-drawer-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  visibility: hidden;
+  pointer-events: none;
+  transition: visibility 0.25s ease-in-out;
+
+  &.open {
+    visibility: visible;
+    pointer-events: auto;
+
+    .mobile-drawer-backdrop {
+      opacity: 1;
     }
-  
-    &:focus {
-      border-bottom: 2px solid var(--primary-color);
-    }
-  }
-  
-  /** class cho modal footer*/
-  .app-modal-middle {
-    padding: 20px;
-  }
-  
-  .app-modal-footer {
-    height: 60px;
-    background-color: var(--primary-gray-200);
-    border-radius: 0 0 8px 8px;
-    display: flex;
-    padding: 0 20px;
-    align-items: center;
-    font-size: 15px;
-    justify-content: flex-end;
-  
-    button {
-      background-color: var(--primary-gray-200);
-      border: 0.5px solid var(--primary-gray-500);
-      border-radius: 2px;
-      height: 35px;
-      min-width: 70px;
-      color: var(--primary-color);
-      margin-left: 10px;
-  
-      &:hover {
-        background-color: var(--primary-gray-400);
-        border: 0.5px solid var(--primary-color);
-      }
-    }
-  }
-  
-  .app-control-global {
-    outline: none;
-    border: 1px solid var(--primary-gray-200);
-    border-radius: 4px;
-    width: 100%;
-    padding: 8px;
-    color: var(--text-color);
-    font-size: var(--font-title-135);
-    height: 35px;
-  
-    &::placeholder {
-      color: var(--text-placeholer-color);
-    }
-  
-    &:focus {
-      border: 1px solid var(--primary-color-blue);
-    }
-  }
-  
-  .app-button-global {
-    height: 35px;
-    border: none;
-    border-radius: 4px;
-    padding: 6px;
-    color: white;
-    font-size: var(--font-title-135);
-    background-color: var(--primary-color-blue);
-    font-weight: var(--font-weight-button);
-  
-    i {
-      margin-right: 5px;
+
+    .mobile-drawer-content {
+      transform: translateX(0);
     }
   }
 
-  .admin-container {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: #f5f7fb;
+  .mobile-drawer-backdrop {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(20, 26, 33, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity 0.25s ease-in-out;
   }
 
-  .admin-content {
-    flex: 1;
-    min-height: 0;
+  .mobile-drawer-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 280px;
+    max-width: 85vw;
+    background: var(--bg-card);
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-dropdown);
+  }
+}
+
+/* Main Area */
+.dashboard-main-area {
+  flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.admin-content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-page-container {
+  width: 100%;
+  margin: 0;
+  padding: 24px 28px 40px 28px;
+  box-sizing: border-box;
+
+  @media (max-width: 1023px) {
+    padding: 20px 16px 32px 16px;
   }
 
-  .admin-main {
-    padding: 20px;
+  @media (max-width: 640px) {
+    padding: 16px 12px 24px 12px;
   }
+}
 
-  .manage-account-container {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-    padding: 24px;
-  }
+/* Card & Section Container System (Minimal UI) */
+.manage-account-container,
+.minimal-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(145, 158, 171, 0.16);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  box-sizing: border-box;
+  margin-bottom: 24px;
+  transition: box-shadow 0.2s ease;
 
-  /* Standard Page Header across ALL tabs */
-  .page-header {
-    margin-bottom: 20px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
+  @media (max-width: 768px) {
+    padding: 16px 14px;
+    border-radius: var(--radius-md);
   }
+}
+
+/* Unified Page Header */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed rgba(145, 158, 171, 0.24);
 
   .page-title {
     font-size: 1.35rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--text-primary);
     margin: 0;
-    line-height: 1.3;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.01em;
+
+    @media (max-width: 640px) {
+      font-size: 1.15rem;
+    }
   }
 
-  /* Standard Table Design System for all tabs */
-  .my-table,
-  .unified-table-wrapper {
-    width: 100%;
-    overflow: hidden;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  p {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+  }
+}
+
+/* Form Controls & Labels */
+.form-label {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--text-secondary) !important;
+  margin-bottom: 6px !important;
+}
+
+.form-control,
+.form-select {
+  font-size: 14px !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-card) !important;
+  border-radius: var(--radius-sm) !important;
+  border: 1px solid rgba(145, 158, 171, 0.28) !important;
+  padding: 8px 12px !important;
+  transition: all 0.2s ease !important;
+
+  &:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.16) !important;
   }
 
-  .my-table table,
-  .user-management-page .table,
-  .unified-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 0;
+  &::placeholder {
+    color: var(--text-disabled) !important;
     font-size: 13.5px !important;
+  }
+}
 
-    thead th {
-      background: #f8fafc !important;
-      color: #334155 !important;
-      font-size: 13.5px !important;
-      font-weight: 600 !important;
-      padding: 12px 14px !important;
-      border-bottom: 1.5px solid #e2e8f0 !important;
-      text-align: center;
-      vertical-align: middle !important;
-    }
+/* Minimal UI Buttons */
+.btn {
+  font-weight: 600 !important;
+  font-size: 13.5px !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 7px 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  transition: all 0.2s ease !important;
 
-    tbody td {
-      padding: 12px 14px !important;
-      border-bottom: 1px solid #f1f5f9 !important;
-      vertical-align: middle !important;
-      font-size: 13.5px !important;
-      color: #334155 !important;
-    }
+  &.btn-primary {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(24, 119, 242, 0.24) !important;
 
-    tbody tr:hover {
-      background-color: #f8fafc !important;
+    &:hover, &:focus {
+      background-color: var(--primary-dark) !important;
+      border-color: var(--primary-dark) !important;
+      box-shadow: 0 6px 14px rgba(24, 119, 242, 0.35) !important;
     }
   }
 
-  /* Standard Form Labels & Controls across tabs */
-  .form-label {
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    color: #475569 !important;
-    margin-bottom: 6px !important;
-  }
+  &.btn-outline-primary {
+    color: var(--primary-color) !important;
+    border-color: rgba(24, 119, 242, 0.48) !important;
 
-  .form-control,
-  .form-select {
-    font-size: 13.5px !important;
-    color: #1f2937 !important;
-    border-radius: 6px !important;
-    border: 1px solid #d1d5db !important;
-
-    &:focus {
-      border-color: #3b82f6 !important;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+    &:hover {
+      background-color: rgba(24, 119, 242, 0.08) !important;
+      border-color: var(--primary-color) !important;
+      color: var(--primary-color) !important;
     }
   }
-  
+}
+
+/* Minimal Badge / Pill styling */
+.badge {
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+  letter-spacing: 0.3px !important;
+
+  &.bg-primary {
+    background-color: rgba(24, 119, 242, 0.16) !important;
+    color: var(--primary-color) !important;
+  }
+
+  &.bg-success {
+    background-color: rgba(34, 197, 94, 0.16) !important;
+    color: var(--success-dark) !important;
+  }
+
+  &.bg-danger {
+    background-color: rgba(255, 86, 48, 0.16) !important;
+    color: var(--error-dark) !important;
+  }
+
+  &.bg-warning {
+    background-color: rgba(255, 171, 0, 0.16) !important;
+    color: var(--warning-dark) !important;
+  }
+
+  &.bg-secondary {
+    background-color: rgba(145, 158, 171, 0.16) !important;
+    color: var(--text-secondary) !important;
+  }
+}

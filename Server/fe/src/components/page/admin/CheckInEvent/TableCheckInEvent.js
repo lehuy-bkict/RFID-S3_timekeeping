@@ -142,9 +142,12 @@ const TableCheckInEvent = ({ currentItems, searchName, currentPage, totalPages, 
                         style={{
                             background: "#fff",
                             padding: 24,
-                            borderRadius: 8,
+                            borderRadius: 14,
                             maxWidth: 540,
                             width: "90%",
+                            maxHeight: "90vh",
+                            overflowY: "auto",
+                            boxShadow: "0 12px 32px rgba(0, 0, 0, 0.2)",
                             textAlign: "center",
                             position: "relative"
                         }}

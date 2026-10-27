@@ -1,30 +1,70 @@
-import Container from 'react-bootstrap/Container';
-import Nav from 'react-bootstrap/Nav';
-import Navbar from 'react-bootstrap/Navbar';
-import { Link, useLocation } from 'react-router-dom';
+import React from 'react';
+import { useLocation } from 'react-router-dom';
+import { FiMenu } from 'react-icons/fi';
+import NotificationPopover from './NotificationPopover';
 import './Header.scss';
 
-const CollapsibleExample = () => {
-    const location = useLocation();
-    const currentPath = location.pathname;
+const PAGE_TITLES = {
+  '/access/admins/home': 'Dashboard Overview',
+  '/access/admins/checkinrealtime': 'Realtime Entry / Exit Check',
+  '/access/admins/checkinevent': 'Events History & Reports',
+  '/access/admins/users': 'User Management & RFID',
+  '/access/admins/live-camera': 'Live Stream Camera',
+  '/access/admins/face-verification': 'Face Verification AI',
+};
 
-    return (
-        <Navbar collapseOnSelect expand="lg" className="header-navbar navbar-custom px-4 py-2">
-            <Container fluid>
-                <Navbar.Toggle aria-controls="responsive-navbar-nav" />
+const Header = ({ onOpenMobileNav, onToggleDesktopCollapse, isCollapsed = false }) => {
+  const location = useLocation();
+  const currentPath = location.pathname.toLowerCase();
+  
+  // Find matching title or fallback
+  const pageTitle = Object.keys(PAGE_TITLES).find(path => currentPath.includes(path))
+    ? PAGE_TITLES[Object.keys(PAGE_TITLES).find(path => currentPath.includes(path))]
+    : 'Admin Portal';
 
-                <Navbar.Collapse id="responsive-navbar-nav">
-                    <Nav className="me-auto">
-                        <Nav.Link as={Link} to="/access/admins/home" className={currentPath.includes('/access/admins/home') ? 'active' : ''}>Home</Nav.Link>
-                        <Nav.Link as={Link} to="/access/admins/CheckInRealtime" className={currentPath.includes('/access/admins/CheckInRealtime') ? 'active' : ''}>Realtime Check</Nav.Link>
-                        <Nav.Link as={Link} to="/access/admins/checkinevent" className={currentPath.includes('/access/admins/checkinevent') ? 'active' : ''}>Events</Nav.Link>
-                        <Nav.Link as={Link} to="/access/admins/users" className={currentPath.includes('/access/admins/users') ? 'active' : ''}>Users</Nav.Link>
-                        <Nav.Link as={Link} to="/access/admins/face-verification" className={currentPath.includes('/access/admins/face-verification') ? 'active' : ''}>Face Verification</Nav.Link>
-                    </Nav>
-                </Navbar.Collapse>
-            </Container>
-        </Navbar>
-    );
-}
+  const handleMenuClick = () => {
+    if (window.innerWidth < 1024) {
+      if (onOpenMobileNav) onOpenMobileNav();
+    } else {
+      if (onToggleDesktopCollapse) onToggleDesktopCollapse();
+    }
+  };
 
-export default CollapsibleExample;
+  return (
+    <header className="minimal-header">
+      <div className="header-left">
+        <button 
+          type="button"
+          className="btn-menu-toggle" 
+          onClick={handleMenuClick}
+          title={isCollapsed ? "Mở rộng thanh menu" : "Thu gọn thanh menu"}
+          aria-label="Toggle navigation menu"
+        >
+          <FiMenu />
+        </button>
+        <div className="header-page-info">
+          <h1 className="header-title">{pageTitle}</h1>
+        </div>
+      </div>
+
+      <div className="header-right">
+        <div className="header-status-pill">
+          <span className="status-indicator"></span>
+          <span className="status-text">ESP32 Connected</span>
+        </div>
+
+        {/* Real-time Notifications Popover (Max 10 items onboard) */}
+        <NotificationPopover />
+
+        <div className="header-user-badge">
+          <div className="user-avatar-circle">
+            <span>A</span>
+          </div>
+          <span className="user-label">Admin</span>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;

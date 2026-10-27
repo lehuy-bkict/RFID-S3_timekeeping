@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import '../table.3/index.css';
+
 function Table3({
   titleArr,
   actionArr,
@@ -65,102 +67,119 @@ function Table3({
 
   if (titleArr.length <= 0) {
     return (
-      <div className="my-table">
-        <table>
-          <thead>
-            <tr>
-              <th></th>
-            </tr>
-          </thead>
-        </table>
+      <div className="my-table my-table-card">
+        <div className="table-scroll-wrapper">
+          <table className="minimal-data-table">
+            <thead>
+              <tr>
+                <th></th>
+              </tr>
+            </thead>
+          </table>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="my-table">
-      <table>
-        <thead>
-          <tr>
-            {titleArr?.map((item, index) => (
-              <th key={index} className="text-center">{item}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {dataArr?.map((datas, dataindex) => (
-            <tr
-              style={
-                selectedId?.idRoot === datas.id && selectedId?.idChild === datas.childId
-                  ? { cursor: 'pointer' }
-                  : {}
-              }
-              key={dataindex}
-              className={`${dataindex % 2 === 0 ? 'my-table-tr-backgroud-none' : 'my-table-tr-backgroud-paint'
-                }`}
-            >
-
-              {Object.keys(datas)?.map((key, index) => {
-                if (key !== 'id' && key !== 'childId') {
-                  return (
-                    <td
-                      key={index}
-                      className={`my-table-tbody-td-special ${selectedId?.idRoot === datas.id && selectedId?.idChild === datas.childId ? 'active' : ''} text-center`}
-                    >
-                      {datas[key]}
-                    </td>
-                  );
-                }
-                return null;
-              })}
-              <td className="my-table-tbody-td-action my-table-tbody-td-special text-center">
-                <div className="my-table-icon">
-                  {actionArr?.map((action, index) => (
-                    action.isVisible && (
-                      <div
-                        title={action.title}
-                        key={index}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          action.callback(e, datas, action);
-                        }}
-                      >
-                        {action.icon}
-                      </div>
-                    )
-                  ))}
-                </div>
-              </td>
+    <div className="my-table my-table-card">
+      <div className="table-scroll-wrapper">
+        <table className="minimal-data-table">
+          <thead>
+            <tr>
+              {titleArr?.map((item, index) => (
+                <th key={index} className="text-center">{item}</th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-
-      </table>
+          </thead>
+          <tbody>
+            {dataArr?.map((datas, dataindex) => (
+              <tr
+                style={
+                  selectedId?.idRoot === datas.id && selectedId?.idChild === datas.childId
+                    ? { cursor: 'pointer' }
+                    : {}
+                }
+                key={dataindex}
+                className={`${dataindex % 2 === 0 ? 'my-table-tr-backgroud-none' : 'my-table-tr-backgroud-paint'
+                  }`}
+              >
+                {Object.keys(datas)?.map((key, index) => {
+                  if (key !== 'id' && key !== 'childId') {
+                    return (
+                      <td
+                        key={index}
+                        className={`my-table-tbody-td-special ${selectedId?.idRoot === datas.id && selectedId?.idChild === datas.childId ? 'active' : ''} text-center`}
+                      >
+                        {datas[key]}
+                      </td>
+                    );
+                  }
+                  return null;
+                })}
+                <td className="my-table-tbody-td-action my-table-tbody-td-special text-center">
+                  <div className="my-table-icon">
+                    {actionArr?.map((action, index) => (
+                      action.isVisible && (
+                        <div
+                          title={action.title}
+                          key={index}
+                          className="table-action-icon-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            action.callback(e, datas, action);
+                          }}
+                        >
+                          {action.icon}
+                        </div>
+                      )
+                    ))}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {totalPages > 0 && (
         <div className="pagebreak">
-          <i
-            className={`bi bi-arrow-left-circle ${currentPage === 1 ? 'disabled-icon' : ''}`}
-            onClick={() => handlePagination(currentPage - 1)}
-          ></i>
-          <ul className="pagination">
-            {getPageNumbers()?.map((page, index) => (
-              <li key={index} className={`page-item ${currentPage === page ? 'active' : ''}`}>
-                <button
-                  className={`page-link ${typeof page === 'string' ? 'cursor-not-allowed' : ''}`}
-                  disabled={typeof page === 'string'}
-                  onClick={() => handlePageClick(page)}
-                >
-                  {page}
-                </button>
-              </li>
-            ))}
-          </ul>
-          <i
-            className={`bi bi-arrow-right-circle ${currentPage === totalPages ? 'disabled-icon' : ''
-              }`}
-            onClick={() => handlePagination(currentPage + 1)}
-          ></i>
+          <div className="page-nav-group">
+            <button
+              type="button"
+              className={`page-arrow-btn ${currentPage === 1 ? 'disabled' : ''}`}
+              disabled={currentPage === 1}
+              onClick={() => handlePagination(currentPage - 1)}
+              title="Previous page"
+              aria-label="Previous page"
+            >
+              <FiChevronLeft />
+            </button>
+            <ul className="pagination">
+              {getPageNumbers()?.map((page, index) => (
+                <li key={index} className={`page-item ${currentPage === page ? 'active' : ''}`}>
+                  <button
+                    type="button"
+                    className={`page-link ${typeof page === 'string' ? 'cursor-not-allowed' : ''}`}
+                    disabled={typeof page === 'string'}
+                    onClick={() => handlePageClick(page)}
+                  >
+                    {page}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              className={`page-arrow-btn ${currentPage === totalPages ? 'disabled' : ''}`}
+              disabled={currentPage === totalPages}
+              onClick={() => handlePagination(currentPage + 1)}
+              title="Next page"
+              aria-label="Next page"
+            >
+              <FiChevronRight />
+            </button>
+          </div>
           <select value={limit} onChange={handleChangeLimit} className="page-size-selector">
             <option value="10">10 / Page</option>
             <option value="20">20 / Page</option>

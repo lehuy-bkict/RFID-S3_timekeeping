@@ -72,12 +72,18 @@
         left: 50%;
         transform: translateX(-50%);
         width: 320px;
+        max-width: calc(100vw - 32px);
+        box-sizing: border-box;
         background: #ffffff;
         border-radius: 12px;
         box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06);
         border: 1px solid #e5e7eb;
         padding: 16px;
         z-index: 1050;
+
+        @media (max-width: 480px) {
+            padding: 12px;
+        }
 
         .calendar-header {
             display: flex;

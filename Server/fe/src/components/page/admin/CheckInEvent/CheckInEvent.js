@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Row, Col, Form, Button } from "react-bootstrap";
+import { Form, Button } from "react-bootstrap";
 import TableCheckInEvent from "./TableCheckInEvent";
 import { useDebounce } from 'use-debounce';
 import * as XLSX from 'xlsx';
@@ -26,7 +26,7 @@ const CheckInEvent = () => {
             if (typeof isPass !== 'undefined') params.ispass = isPass;
 
             const response = await GetData(params);
-            const eventData = Array.isArray(response.data.data) ? response.data.data : [];
+            const eventData = Array.isArray(response?.data?.data) ? response.data.data : [];
             setData(eventData);
         } catch (error) {
             console.error("Error fetching data:", error);
@@ -87,75 +87,65 @@ const CheckInEvent = () => {
     return (
         <div className="manage-account-container checkin-event-page">
             <div className="page-header">
-                <h3 className="page-title">Detailed Entry / Exit Report</h3>
-            </div>
-            <Container fluid>
-                <Row className="mb-3">
-                    <Col md={3}>
-                        <Form.Group>
-                            <Form.Label>Date range</Form.Label>
-                            <DateRangePicker
-                                startDate={startDate}
-                                endDate={endDate}
-                                onChange={({ startDate, endDate }) => {
-                                    setStartDate(startDate);
-                                    setEndDate(endDate);
-                                }}
-                                maxDays={30}
-                            />
-                        </Form.Group>
-                    </Col>
-                    <Col md={2}>
-                        <Form.Group>
-                            <Form.Label>Status</Form.Label>
-                            <Form.Control
-                                as="select"
-                                onChange={(e) => setIsPass(e.target.value === "undefined" ? undefined : e.target.value === "true")}
-                            >
-                                <option value="undefined">  </option>
-                                <option value="false">Inside</option>
-                                <option value="true">Outside</option>
-                            </Form.Control>
-                        </Form.Group>
-                    </Col>
-                    <Col md={2} className="d-flex align-items-end">
-                        <Col md={5}>
-                            <Button variant="primary" onClick={handleSearch}>
-                                ↻ Refresh
-                            </Button>
-                        </Col>
-                        <Col md={6}>
-                            <Button variant="success" className="ms-3" onClick={handleExportExcel}>
-                                + Export Excel
-                            </Button>
-                        </Col>
-                    </Col>
-                </Row>
-                <Row className="mb-3">
-                    <Col md={5}>
-                        <Form.Group>
-                            <Form.Label>Search</Form.Label>
-                            <Form.Control
-                                type="text"
-                                placeholder="Enter keyword"
-                                onChange={(event) => setSearchName(event.target.value)}
-                            />
-                        </Form.Group>
-                    </Col>
-                </Row>
                 <div>
-                    <TableCheckInEvent
-                        currentPage={currentPage}
-                        currentItems={currentItems}
-                        totalPages={totalPages}
-                        searchName={searchName}
-                        handlePagination={handlePagination}
-                        limit={itemsPerPage}
-                        handleChangeLimit={handleChangeLimit}
-                        refreshData={fetchData}
+                    <h3 className="page-title">Detailed Entry / Exit Report</h3>
+                    <p className="text-muted mb-0">Lịch sử quẹt thẻ RFID và trạng thái ra vào</p>
+                </div>
+            </div>
+
+            <div className="event-filters-toolbar mb-4">
+                <div className="filter-item date-picker-item">
+                    <Form.Label>Date range</Form.Label>
+                    <DateRangePicker
+                        startDate={startDate}
+                        endDate={endDate}
+                        onChange={({ startDate, endDate }) => {
+                            setStartDate(startDate);
+                            setEndDate(endDate);
+                        }}
+                        maxDays={30}
                     />
                 </div>
-            </Container>
+                <div className="filter-item status-select-item">
+                    <Form.Label>Pass status</Form.Label>
+                    <Form.Select
+                        onChange={(e) => setIsPass(e.target.value === "undefined" ? undefined : e.target.value === "true")}
+                    >
+                        <option value="undefined">All Statuses</option>
+                        <option value="false">Inside</option>
+                        <option value="true">Outside</option>
+                    </Form.Select>
+                </div>
+                <div className="filter-item search-input-item">
+                    <Form.Label>Search keyword</Form.Label>
+                    <Form.Control
+                        type="text"
+                        placeholder="Search card, user, device..."
+                        onChange={(event) => setSearchName(event.target.value)}
+                    />
+                </div>
+                <div className="filter-actions-item">
+                    <Button variant="outline-primary" onClick={handleSearch} className="action-btn">
+                        ↻ Refresh
+                    </Button>
+                    <Button variant="success" onClick={handleExportExcel} className="action-btn">
+                        📥 Export Excel
+                    </Button>
+                </div>
+            </div>
+
+            <div>
+                <TableCheckInEvent
+                    currentPage={currentPage}
+                    currentItems={currentItems}
+                    totalPages={totalPages}
+                    searchName={searchName}
+                    handlePagination={handlePagination}
+                    limit={itemsPerPage}
+                    handleChangeLimit={handleChangeLimit}
+                    refreshData={fetchData}
+                />
+            </div>
         </div>
     );
 };

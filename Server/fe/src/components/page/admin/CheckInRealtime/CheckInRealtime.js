@@ -165,7 +165,7 @@ const CheckInRealtime = () => {
             <Container fluid className="px-0">
                 {showLiveCam && (
                     <Row className="mb-4 g-3">
-                        <Col lg={7}>
+                        <Col xs={12} lg={7}>
                             <Card className="camera-embed-card border-0 shadow-sm overflow-hidden">
                                 <Card.Header className="bg-dark text-white d-flex justify-content-between align-items-center py-2 px-3">
                                     <span className="fw-semibold small">
@@ -193,7 +193,7 @@ const CheckInRealtime = () => {
                             </Card>
                         </Col>
 
-                        <Col lg={5}>
+                        <Col xs={12} lg={5}>
                             <Card className="border-0 shadow-sm h-100 latest-scan-card">
                                 <Card.Header className="bg-white border-bottom py-2">
                                     <span className="fw-bold small text-uppercase text-muted">Lần Quẹt Thẻ Gần Nhất</span>
@@ -201,20 +201,20 @@ const CheckInRealtime = () => {
                                 <Card.Body className="d-flex flex-column justify-content-center">
                                     {latestScan ? (
                                         <div>
-                                            <div className="d-flex align-items-center justify-content-between mb-3">
+                                            <div className="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                                                 <h5 className="mb-0 text-primary">{latestScan.userName}</h5>
                                                 <Badge bg={latestScan.verificationStatus === 'MATCHED' ? 'success' : (latestScan.verificationStatus === 'UNASSIGNED_CLIENT' ? 'secondary' : 'danger')}>
                                                     {latestScan.verificationStatus === 'MATCHED' ? 'KHỚP MẶT (CHÍNH CHỦ)' : (latestScan.verificationStatus === 'UNASSIGNED_CLIENT' ? 'THẺ KHÁCH' : 'KHÔNG KHỚP')}
                                                 </Badge>
                                             </div>
                                             <Row className="small text-muted mb-3 g-2">
-                                                <Col sm={6}>Mã thẻ: <strong>{latestScan.rfid}</strong></Col>
-                                                <Col sm={6}>Thiết bị: <strong>{latestScan.device}</strong></Col>
-                                                <Col sm={6}>Trạng thái: <strong>{latestScan.status}</strong></Col>
+                                                <Col xs={6} sm={6}>Mã thẻ: <strong>{latestScan.rfid}</strong></Col>
+                                                <Col xs={6} sm={6}>Thiết bị: <strong>{latestScan.device}</strong></Col>
+                                                <Col xs={6} sm={6}>Trạng thái: <strong>{latestScan.status}</strong></Col>
                                                 {latestScan.similarity !== null && (
-                                                    <Col sm={6}>Độ tương đồng: <strong>{(latestScan.similarity * 100).toFixed(1)}%</strong></Col>
+                                                    <Col xs={6} sm={6}>Độ tương đồng: <strong>{(latestScan.similarity * 100).toFixed(1)}%</strong></Col>
                                                 )}
-                                                <Col sm={12}>Thời gian: <strong>{new Date(latestScan.time).toLocaleString()}</strong></Col>
+                                                <Col xs={12}>Thời gian: <strong>{new Date(latestScan.time).toLocaleString()}</strong></Col>
                                             </Row>
                                             {(latestScan.checkinImage || latestScan.checkoutImage) && (
                                                 <div className="snapshot-preview text-center mt-2">
@@ -241,7 +241,7 @@ const CheckInRealtime = () => {
                 )}
 
                 <Row className="mb-3">
-                    <Col md={5}>
+                    <Col xs={12} sm={8} md={5}>
                         <Form.Group>
                             <Form.Label>Search</Form.Label>
                             <Form.Control
