@@ -68,17 +68,17 @@ flowchart TD
 - **USB Webcam** (connected to the host server)
 - **Jumper wires and 5V USB power supply**
 
-### Pin Connection (ESP32 to RC522)
+### Pin Connection (ESP32-S3 to RC522)
 
-| RC522 Pin | ESP32 GPIO Pin | Function |
-|:---------:|:--------------:|:--------:|
-| **SDA (SS)** | GPIO 5 | SPI Chip Select |
-| **SCK** | GPIO 18 | SPI Clock |
-| **MOSI** | GPIO 23 | SPI Master Out Slave In |
-| **MISO** | GPIO 19 | SPI Master In Slave Out |
-| **RST** | GPIO 22 | Reset |
-| **GND** | GND | Ground |
-| **3.3V** | 3.3V | Power Supply (Do NOT connect to 5V) |
+| RC522 Pin | ESP32-S3 GPIO Pin | Function | Ghi chú |
+|:---------:|:-----------------:|:--------:|:-------|
+| **SDA (SS)** | GPIO 10 | SPI Chip Select | Thẳng hàng (Pin 16 header J1) |
+| **SCK** | GPIO 11 | SPI Clock | Thẳng hàng ngay sát SDA (Pin 17) |
+| **MOSI** | GPIO 12 | SPI Master Out Slave In | Thẳng hàng ngay sát SCK (Pin 18) |
+| **MISO** | GPIO 13 | SPI Master In Slave Out | Thẳng hàng ngay sát MOSI (Pin 19) |
+| **RST** | GPIO 14 | Reset | Liền kề ngay sau chân GPIO 13 (Pin 20) |
+| **GND** | GND | Ground | Nối đất |
+| **3.3V** | 3.3V | Power Supply | 3.3V (Tuyệt đối không cấp 5V) |
 
 ---
 

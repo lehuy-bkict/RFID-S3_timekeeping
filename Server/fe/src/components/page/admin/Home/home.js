@@ -106,11 +106,11 @@ function Home() {
                     />
                 </div>
                 <div className="stat-card">
-                    <h3>Vehicles entered</h3>
+                    <h3>Clients entered</h3>
                     <div className="stat-value">{stats.xeVao}</div>
                 </div>
                 <div className="stat-card">
-                    <h3>Vehicles exited</h3>
+                    <h3>Clients exited</h3>
                     <div className="stat-value">{stats.xeRa}</div>
                 </div>
                 <div className="stat-card">
@@ -118,7 +118,7 @@ function Home() {
                     <div className="stat-value">{stats.thietBi}</div>
                 </div>
                 <div className="stat-card">
-                    <h3>Vehicles inside</h3>
+                    <h3>Clients inside</h3>
                     <div className="stat-value">{stats.xeTrongNhaXe}</div>
                 </div>
             </div>

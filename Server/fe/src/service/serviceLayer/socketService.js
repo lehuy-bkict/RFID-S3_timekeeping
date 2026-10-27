@@ -1,7 +1,7 @@
 import io from 'socket.io-client';
 import { toast } from 'react-toastify';
 
-const SOCKET_URL = 'http://localhost:8999';
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:8999';
 
 class SocketService {
   socket = null;

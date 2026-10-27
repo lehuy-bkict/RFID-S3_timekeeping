@@ -3,8 +3,12 @@
 #include <SPI.h>
 #include <MFRC522.h>
 #include <time.h>
-#define RST_PIN 22
-#define SS_PIN 5
+// ESP32-S3 Consecutive Pinout for RC522 (Straight wiring: SDA->10, SCK->11, MOSI->12, MISO->13, RST->14)
+#define RST_PIN   14
+#define SS_PIN    10
+#define SCK_PIN   11
+#define MOSI_PIN  12
+#define MISO_PIN  13
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
@@ -87,7 +91,7 @@ void reconnect() {
 
 void setup() {
   Serial.begin(115200);
-  SPI.begin(18, 19, 23);  
+  SPI.begin(SCK_PIN, MISO_PIN, MOSI_PIN, SS_PIN);  
   mfrc522.PCD_Init();
 
   setup_wifi();

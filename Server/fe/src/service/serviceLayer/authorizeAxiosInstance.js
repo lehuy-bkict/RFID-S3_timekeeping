@@ -1,8 +1,12 @@
 import axios from "axios";
 import { toast } from 'react-toastify';
 
+const API_BASE_URL =
+  process.env.REACT_APP_API_BASE_URL ||
+  `${(process.env.REACT_APP_SOCKET_URL || 'http://localhost:8999').replace(/\/+$/, '')}/api/V1/Developer`;
+
 let authorizeAxiosInstance = axios.create({
-  baseURL: `http://localhost:8999/api/V1/Developer`,
+  baseURL: API_BASE_URL,
 }
 );
 

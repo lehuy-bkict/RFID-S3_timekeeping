@@ -1,8 +1,14 @@
-RC522 Pin    ESP32 GPIO Pin    Function
-SDA (SS)     GPIO 5            SPI Chip Select
-SCK          GPIO 18           SPI Clock
-MOSI         GPIO 23           SPI Master Out Slave In
-MISO         GPIO 19           SPI Master In Slave Out
-RST          GPIO 22           Reset
-GND          GND               Ground
-3.3V         3.3V              Power Supply (3.3V only)
+RC522 Pin    ESP32-S3 GPIO Pin    Function
+SDA (SS)     GPIO 10              SPI Chip Select
+SCK          GPIO 11              SPI Clock
+MOSI         GPIO 12              SPI Master Out Slave In
+MISO         GPIO 13              SPI Master In Slave Out
+RST          GPIO 14              Reset
+GND          GND                  Ground
+3.3V         3.3V                 Power Supply (3.3V only - DO NOT connect to 5V)
+
+Note for ESP32-S3:
+- Pins 10, 11, 12, 13 match the consecutive physical pin order of RC522 (SDA, SCK, MOSI, MISO) for easy straight ribbon cable wiring.
+- GPIO 10, 11, 12, 13, 14 form a continuous block of 5 adjacent pins on header J1 (Pins 16 through 20).
+- RST (GPIO 14) is located right after GPIO 13 on header J1 (Pin 20).
+- Avoid using GPIO 19 and 20 for SPI on ESP32-S3 as they are dedicated to Native USB (D- / D+).

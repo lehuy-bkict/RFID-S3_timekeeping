@@ -1,15 +1,22 @@
-#include <PubSubClient.h>
-#include <WiFi.h>
-#include <SPI.h>
 #include <MFRC522.h>
+#include <PubSubClient.h>
+#include <SPI.h>
+#include <WiFi.h>
 #include <time.h>
-#define RST_PIN 22
-#define SS_PIN 5
+
+// ESP32-S3 Consecutive Pinout for RC522 (Straight wiring: SDA->10, SCK->11, MOSI->12, MISO->13, RST->14)
+#define RST_PIN   14
+#define SS_PIN    10
+#define SCK_PIN   11
+#define MOSI_PIN  12
+#define MISO_PIN  13
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
 const char* ssid = "Lhhuy";
 const char* password = "0961163347";
+const char* id_backup = "@Lhh";
+const char* pass_backup = "12345678";
 const char* ssid_backup = "APS LAB";
 const char* password_backup = "Vim#0343222666";
 const char* mqtt_server = "broker.hivemq.com";
@@ -37,29 +44,44 @@ void setup_wifi() {
   WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE,
               IPAddress(8, 8, 8, 8), IPAddress(1, 1, 1, 1));
 
-  // Connect to primary Wi-Fi
-  Serial.print("Connecting to primary WiFi: ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
+  struct WifiNetwork {
+    const char* ssid;
+    const char* password;
+  };
 
-  unsigned long startedAt = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - startedAt < 15000) {
-    delay(500);
-    Serial.print(".");
-  }
+  WifiNetwork networks[] = {
+    {ssid, password},
+    {id_backup, pass_backup},
+    {ssid_backup, password_backup}
+  };
 
-  // Fall back to secondary Wi-Fi if primary connection fails
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("\nFailed to connect to primary WiFi. Connecting to backup WiFi: ");
-    Serial.println(ssid_backup);
+  const int total_networks = sizeof(networks) / sizeof(networks[0]);
+
+  for (int i = 0; i < total_networks; i++) {
+    Serial.println();
+    Serial.print("[WiFi] Dang thu ket noi (");
+    Serial.print(i + 1);
+    Serial.print("/");
+    Serial.print(total_networks);
+    Serial.print("): ");
+    Serial.println(networks[i].ssid);
+
     WiFi.disconnect();
     delay(500);
-    WiFi.begin(ssid_backup, password_backup);
+    WiFi.begin(networks[i].ssid, networks[i].password);
 
-    startedAt = millis();
+    unsigned long startedAt = millis();
     while (WiFi.status() != WL_CONNECTED && millis() - startedAt < 15000) {
       delay(500);
       Serial.print(".");
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println("\n[WiFi] Ket noi thanh cong!");
+      break;
+    } else {
+      Serial.print("\n[WiFi] Khong the ket noi toi: ");
+      Serial.println(networks[i].ssid);
     }
   }
 
@@ -110,7 +132,7 @@ void reconnect() {
 
 void setup() {
   Serial.begin(115200);
-  SPI.begin(18, 19, 23);  
+  SPI.begin(SCK_PIN, MISO_PIN, MOSI_PIN, SS_PIN);
   mfrc522.PCD_Init();
 
   mqttClientId = "ESP32Client-" + String((uint32_t)ESP.getEfuseMac(), HEX);
@@ -142,7 +164,8 @@ void loop() {
 
   String timestamp = getCurrentTime();
 
-  String payload = "{\"rfid\":\"" + rfidTag + "\",\"timestamp\":\"" + timestamp + "\",\"device\":\"" + deviceID + "\"}";
+  String payload = "{\"rfid\":\"" + rfidTag + "\",\"timestamp\":\"" +
+                   timestamp + "\",\"device\":\"" + deviceID + "\"}";
   Serial.println(payload);
   if (client.publish(mqtt_topic, payload.c_str())) {
     Serial.println("RFID published");
