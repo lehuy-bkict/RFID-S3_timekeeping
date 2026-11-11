@@ -6,4 +6,12 @@ export const GetData = async (CheckInOut) => {
 export const DeleteData = async (CheckInOut) => {
     return await authorizeAxiosInstance.post("/CheckInOut/DeleteData", CheckInOut);
 };
-
+export const CreateBypassScan = async (cameraSource = 'desktop') => {
+    return await authorizeAxiosInstance.post("/CheckInOut/BypassScan", { cameraSource });
+};
+export const GetCameraConfig = async () => {
+    return await authorizeAxiosInstance.get("/CameraConfig");
+};
+export const SaveCameraConfig = async (cameraSource) => {
+    return await authorizeAxiosInstance.post("/CameraConfig", { cameraSource });
+};

@@ -47,6 +47,14 @@ const TableCheckInRealtime = ({ currentPage, currentItems, totalPages, searchNam
 
   const dataArr = safeItems.map((item, index) => {
     const isClient = !item.userName || item.userName.toLowerCase() === 'client';
+    const isRejected = [
+      'REJECTED',
+      'FACE_MISMATCH',
+      'FACE_VERIFICATION_FAILED',
+      'USER_LOOKUP_FAILED',
+      'ATTENDANCE_SAVE_FAILED',
+      'PROCESSING_ERROR'
+    ].includes(item.verificationStatus);
     return {
       id: item.id,
       stt: index + 1 + (currentPage - 1) * limit,
@@ -56,7 +64,7 @@ const TableCheckInRealtime = ({ currentPage, currentItems, totalPages, searchNam
             client
           </span>
         ) : (
-          <span className="badge bg-primary px-2 py-1" style={{ fontSize: "12px" }}>
+          <span className={`badge ${isRejected ? 'bg-danger' : 'bg-primary'} px-2 py-1`} style={{ fontSize: "12px" }}>
             <span dangerouslySetInnerHTML={{ __html: highlightText(item.userName, searchName) }} />
           </span>
         )

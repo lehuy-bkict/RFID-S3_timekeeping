@@ -1,56 +1,148 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Card, Badge, Row, Col, Alert } from 'react-bootstrap';
+import { Card, Badge, Row, Col, Alert, Form, Button } from 'react-bootstrap';
 import socketService from '../../../../service/serviceLayer/socketService';
+import { GetCameraConfig, SaveCameraConfig } from '../../../../service/apiAdmin/ApiAreaService';
+import { toast } from 'react-toastify';
 import './LiveCamera.scss';
 
 const LiveCamera = () => {
-  const [frame, setFrame] = useState(null);
+  const [desktopFrame, setDesktopFrame] = useState(null);
+  const [esp32Frame, setEsp32Frame] = useState(null);
+  const [cameraSource, setCameraSource] = useState('desktop');
+  const [savedCameraSource, setSavedCameraSource] = useState('desktop');
   const [lastUpdate, setLastUpdate] = useState(null);
   const [fps, setFps] = useState(0);
-  const [isConnected, setIsConnected] = useState(false);
+  const [socketConnected, setSocketConnected] = useState(false);
+  const [esp32Connected, setEsp32Connected] = useState(false);
+  const [isConfigLoaded, setIsConfigLoaded] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const frameCountRef = useRef(0);
   const lastFpsCalcRef = useRef(Date.now());
+  const esp32FrameUrlRef = useRef(null);
+  const cameraSourceRef = useRef(cameraSource);
+  cameraSourceRef.current = cameraSource;
 
   useEffect(() => {
+    let active = true;
+    GetCameraConfig()
+      .then((response) => {
+        const configuredSource = response?.data?.data?.cameraSource;
+        if (active && (configuredSource === 'desktop' || configuredSource === 'esp32')) {
+          setCameraSource(configuredSource);
+          setSavedCameraSource(configuredSource);
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to load attendance camera configuration:', error);
+        toast.error('Không tải được cấu hình camera đang sử dụng.');
+      })
+      .finally(() => {
+        if (active) setIsConfigLoaded(true);
+      });
+
     socketService.connect();
     const socket = socketService.getSocket();
 
-    if (!socket) return;
+    if (!socket) {
+      return () => {
+        active = false;
+      };
+    }
 
-    setIsConnected(socket.connected);
+    setSocketConnected(socket.connected);
 
-    const onConnect = () => setIsConnected(true);
+    const onConnect = () => setSocketConnected(true);
     const onDisconnect = () => {
-      setIsConnected(false);
+      setSocketConnected(false);
+      setEsp32Connected(false);
       setFps(0);
     };
 
-    const handleCameraFrame = (data) => {
-      if (data?.image) {
-        setFrame(data.image);
-        setLastUpdate(Date.now());
-        frameCountRef.current += 1;
+    const recordFrame = (source) => {
+      if (source !== cameraSourceRef.current) return;
+      setLastUpdate(Date.now());
+      frameCountRef.current += 1;
 
-        const now = Date.now();
-        const elapsed = now - lastFpsCalcRef.current;
-        if (elapsed >= 1000) {
-          setFps(Math.round((frameCountRef.current * 1000) / elapsed));
-          frameCountRef.current = 0;
-          lastFpsCalcRef.current = now;
-        }
+      const now = Date.now();
+      const elapsed = now - lastFpsCalcRef.current;
+      if (elapsed >= 1000) {
+        setFps(Math.round((frameCountRef.current * 1000) / elapsed));
+        frameCountRef.current = 0;
+        lastFpsCalcRef.current = now;
       }
+    };
+
+    const handleDesktopFrame = (data) => {
+      if (data?.image) {
+        setDesktopFrame(data.image);
+        recordFrame('desktop');
+      }
+    };
+
+    const handleEsp32Frame = (frameData) => {
+      if (!frameData) return;
+      const binaryFrame = frameData?.type === 'Buffer' && Array.isArray(frameData.data)
+        ? new Uint8Array(frameData.data)
+        : frameData;
+      const frameUrl = URL.createObjectURL(
+        binaryFrame instanceof Blob
+          ? binaryFrame
+          : new Blob([binaryFrame], { type: 'image/jpeg' })
+      );
+      if (esp32FrameUrlRef.current) {
+        URL.revokeObjectURL(esp32FrameUrlRef.current);
+      }
+      esp32FrameUrlRef.current = frameUrl;
+      setEsp32Frame(frameUrl);
+      setEsp32Connected(true);
+      recordFrame('esp32');
+    };
+
+    const handleEsp32Status = (status) => {
+      setEsp32Connected(!!status?.connected);
     };
 
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
-    socket.on('camera-frame', handleCameraFrame);
+    socket.on('camera-frame', handleDesktopFrame);
+    socket.on('esp32-camera-frame', handleEsp32Frame);
+    socket.on('esp32-camera-status', handleEsp32Status);
 
     return () => {
+      active = false;
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
-      socket.off('camera-frame', handleCameraFrame);
+      socket.off('camera-frame', handleDesktopFrame);
+      socket.off('esp32-camera-frame', handleEsp32Frame);
+      socket.off('esp32-camera-status', handleEsp32Status);
+      if (esp32FrameUrlRef.current) {
+        URL.revokeObjectURL(esp32FrameUrlRef.current);
+        esp32FrameUrlRef.current = null;
+      }
     };
   }, []);
+
+  const handleSaveCamera = async () => {
+    setIsSaving(true);
+    try {
+      const response = await SaveCameraConfig(cameraSource);
+      if (!response?.data?.success) {
+        throw new Error(response?.data?.messages || 'Không thể lưu cấu hình camera.');
+      }
+      setSavedCameraSource(cameraSource);
+      toast.success(response.data.messages || 'Đã lưu camera sử dụng cho lượt quẹt RFID.');
+    } catch (error) {
+      console.error('Failed to save attendance camera configuration:', error);
+      toast.error(error.response?.data?.messages || error.message || 'Không thể lưu cấu hình camera.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const frame = cameraSource === 'desktop' ? desktopFrame : esp32Frame;
+  const cameraConnected = cameraSource === 'desktop'
+    ? socketConnected && !!desktopFrame
+    : socketConnected && esp32Connected && !!esp32Frame;
 
   return (
     <div className="manage-account-container live-camera-page">
@@ -60,13 +152,13 @@ const LiveCamera = () => {
           <p className="text-muted mb-0">Luồng camera thời gian thực qua Socket.IO • Giám sát góc mặt người dùng tại cổng kiểm soát</p>
         </div>
         <div className="d-flex align-items-center gap-2">
-          {isConnected && frame ? (
+          {cameraConnected ? (
             <Badge bg="danger" className="pulse-live px-3 py-2">
-              <span className="live-dot me-2"></span>LIVE • {fps || 15} FPS
+              <span className="live-dot me-2"></span>LIVE • {fps || (cameraSource === 'esp32' ? 4 : 15)} FPS
             </Badge>
           ) : (
             <Badge bg="secondary" className="px-3 py-2">
-              ĐANG KẾT NỐI...
+              {cameraSource === 'esp32' && !esp32Connected ? 'ESP32 OFFLINE' : 'ĐANG KẾT NỐI...'}
             </Badge>
           )}
         </div>
@@ -97,8 +189,8 @@ const LiveCamera = () => {
               ) : (
                 <div className="camera-loading-placeholder d-flex flex-column align-items-center justify-content-center">
                   <div className="spinner-border text-primary mb-3" role="status"></div>
-                  <h5 className="text-white">Đang tải luồng camera từ server...</h5>
-                  <p className="text-white-50 small mb-0">Vui lòng đảm bảo server Node.js và AI service đang hoạt động</p>
+                  <h5 className="text-white">Đang tải luồng camera {cameraSource === 'esp32' ? 'ESP32' : 'desktop'}...</h5>
+                  <p className="text-white-50 small mb-0">Kiểm tra trạng thái camera và kết nối MQTT nếu chưa có hình.</p>
                 </div>
               )}
             </Card.Body>
@@ -111,13 +203,49 @@ const LiveCamera = () => {
               <h5 className="mb-0">Trạng Thái & Hướng Dẫn</h5>
             </Card.Header>
             <Card.Body>
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-semibold">Camera dùng khi quẹt RFID</Form.Label>
+                <Form.Select
+                  value={cameraSource}
+                  onChange={(event) => {
+                    setCameraSource(event.target.value);
+                    setFps(0);
+                    frameCountRef.current = 0;
+                    lastFpsCalcRef.current = Date.now();
+                  }}
+                  disabled={!isConfigLoaded || isSaving}
+                >
+                  <option value="desktop">Camera desktop (AI service trên máy chủ)</option>
+                  <option value="esp32">ESP32-S3 Camera (MQTT)</option>
+                </Form.Select>
+                <Form.Text className="text-muted">
+                  Camera đã lưu: {savedCameraSource === 'esp32' ? 'ESP32-S3' : 'desktop'}.
+                  Thay đổi chỉ có hiệu lực sau khi bấm lưu.
+                </Form.Text>
+                <Button
+                  className="w-100 mt-2"
+                  variant="primary"
+                  onClick={handleSaveCamera}
+                  disabled={!isConfigLoaded || isSaving}
+                >
+                  {isSaving ? 'Đang lưu...' : 'Lưu camera sử dụng'}
+                </Button>
+              </Form.Group>
               <div className="status-item d-flex justify-content-between py-2 border-bottom">
                 <span className="text-muted">Kênh truyền:</span>
                 <Badge bg="info">Socket.IO (WebSocket)</Badge>
               </div>
               <div className="status-item d-flex justify-content-between py-2 border-bottom">
-                <span className="text-muted">Chế độ Camera:</span>
-                <span className="fw-semibold text-success">Luôn mở (Không lưu đĩa)</span>
+                <span className="text-muted">Nguồn đang xem:</span>
+                <Badge bg={cameraConnected ? 'success' : 'secondary'}>
+                  {cameraSource === 'esp32' ? 'ESP32-S3' : 'Desktop'} {cameraConnected ? 'ONLINE' : 'OFFLINE'}
+                </Badge>
+              </div>
+              <div className="status-item d-flex justify-content-between py-2 border-bottom">
+                <span className="text-muted">Nguồn dùng cho RFID:</span>
+                <Badge bg="primary">
+                  {savedCameraSource === 'esp32' ? 'ESP32-S3' : 'Desktop'}
+                </Badge>
               </div>
               <div className="status-item d-flex justify-content-between py-2 border-bottom">
                 <span className="text-muted">Chụp & Đối chiếu:</span>
@@ -139,7 +267,7 @@ const LiveCamera = () => {
             <ul className="small ps-3 mb-0 text-muted">
               <li>Đứng thẳng, hướng mặt vào khu vực trung tâm khung hình.</li>
               <li>Khoảng cách tối ưu từ 0.5m đến 1.2m tới camera.</li>
-              <li>Khi quẹt thẻ, hệ thống sẽ tự động chụp ảnh hiện tại từ góc này để so khớp.</li>
+              <li>Khi quẹt thẻ, backend chụp từ camera đã lưu trong collection Config.</li>
             </ul>
           </Alert>
         </Col>

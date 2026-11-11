@@ -8,7 +8,7 @@ const http = require('http');
 const server = http.createServer(app);
 
 const { initSocket } = require('./base_connects/base_socketIO/init.socket');
-initSocket(server);  
+initSocket(server);
 
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');

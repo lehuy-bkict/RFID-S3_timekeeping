@@ -24,6 +24,11 @@ const InfoCheckInOutSchema = new Schema({
         type: Number,
         default: null
     },
+    cameraSource: {
+        type: String,
+        enum: ['desktop', 'esp32'],
+        default: 'desktop'
+    },
     ispass: {
         type: Boolean,
         default: false
@@ -39,11 +44,19 @@ const InfoCheckInOutSchema = new Schema({
         CheckInImage: {
             type: String
         },
+        CheckInCameraSource: {
+            type: String,
+            enum: ['desktop', 'esp32']
+        },
         CheckOut: {
             type: Date
         },
         CheckOutImage: {
             type: String
+        },
+        CheckOutCameraSource: {
+            type: String,
+            enum: ['desktop', 'esp32']
         }
     },
     CreateTime: {

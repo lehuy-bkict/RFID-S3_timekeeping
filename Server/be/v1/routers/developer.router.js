@@ -6,6 +6,8 @@ const homeController = require('../controllers/dashboard.controller')
 const InfoCheckInOutModel = require('../controllers/checkinout.controller')
 const userController = require('../controllers/user.controller')
 const faceVerificationController = require('../controllers/faceVerification.controller')
+const bypassScanController = require('../controllers/bypassScan.controller')
+const cameraConfigController = require('../controllers/cameraConfig.controller')
 const pingController = require('../../routers/ping.js')
 const { CatChErr } = require('../../utils/errcatch')
 
@@ -15,6 +17,9 @@ router.post('/Home/DashBoardInput', CatChErr.handleErr(homeController.DashBoardI
 
 router.post('/CheckInOut/GetData', CatChErr.handleErr(InfoCheckInOutModel.GetData))
 router.post('/CheckInOut/DeleteData', CatChErr.handleErr(InfoCheckInOutModel.DeleteData))
+router.post('/CheckInOut/BypassScan', CatChErr.handleErr(bypassScanController.create))
+router.get('/CameraConfig', CatChErr.handleErr(cameraConfigController.get))
+router.post('/CameraConfig', CatChErr.handleErr(cameraConfigController.save))
 router.post('/FaceVerification/Verify', CatChErr.handleErr(faceVerificationController.verify))
 
 router.post('/User/GetData', CatChErr.handleErr(userController.GetData))
