@@ -4,39 +4,11 @@
 #include <mqtt_client.h>
 #include <WiFi.h>
 
+#include "../include/device_config.h"
+
 #ifndef OTA_PASSWORD
 #define OTA_PASSWORD ""
 #endif
-
-// Freenova ESP32-S3-CAM camera pins
-#define PWDN_GPIO_NUM -1
-#define RESET_GPIO_NUM -1
-#define XCLK_GPIO_NUM 15
-#define SIOD_GPIO_NUM 4
-#define SIOC_GPIO_NUM 5
-#define Y9_GPIO_NUM 16
-#define Y8_GPIO_NUM 17
-#define Y7_GPIO_NUM 18
-#define Y6_GPIO_NUM 12
-#define Y5_GPIO_NUM 10
-#define Y4_GPIO_NUM 8
-#define Y3_GPIO_NUM 9
-#define Y2_GPIO_NUM 11
-#define VSYNC_GPIO_NUM 6
-#define HREF_GPIO_NUM 7
-#define PCLK_GPIO_NUM 13
-
-const char* ssid = "@Lhh";
-const char* password = "12345678";
-const char* mqttBrokerUri = "mqtt://10.174.100.95";
-const int mqttPort = 1883;
-const char* cameraFrameTopic = "esp32/camera/frame";
-const char* cameraStatusTopic = "esp32/camera/status";
-
-constexpr uint32_t WIFI_RETRY_INTERVAL_MS = 15000;
-constexpr uint32_t MQTT_RETRY_INTERVAL_MS = 5000;
-constexpr uint32_t CAMERA_PUBLISH_INTERVAL_MS = 250;
-constexpr int MQTT_BUFFER_SIZE = 16384;
 
 uint32_t wifiAttemptStartedAt = 0;
 uint32_t mqttLastStartAttemptAt = 0;
@@ -104,8 +76,8 @@ void beginNextWifiAttempt() {
   WiFi.setAutoReconnect(true);
   WiFi.disconnect();
   Serial.print("[WiFi] Connecting to: ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
+  Serial.println(WIFI_SSID);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   wifiAttemptStartedAt = millis();
 }
 
@@ -119,7 +91,7 @@ void mqttEventHandler(void* handlerArgs, esp_event_base_t eventBase,
     mqttConnected = true;
     Serial.println("[MQTT] Connected to broker.");
     int messageId = esp_mqtt_client_enqueue(
-        mqttClient, cameraStatusTopic, "online", 6, 1, 1, true);
+        mqttClient, MQTT_CAMERA_STATUS_TOPIC, "online", 6, 1, 1, true);
     if (messageId < 0) {
       Serial.println("[MQTT] Failed to publish camera online status.");
     }
@@ -135,14 +107,15 @@ void startMqttClient() {
   mqttClientId = "ESP32-S3-CAMERA-" +
                  String(static_cast<uint32_t>(ESP.getEfuseMac()), HEX);
 
+  String mqttUri = "mqtt://" + String(MQTT_HOST);
   esp_mqtt_client_config_t config = {};
-  config.uri = mqttBrokerUri;
-  config.port = mqttPort;
+  config.uri = mqttUri.c_str();
+  config.port = MQTT_PORT;
   config.client_id = mqttClientId.c_str();
   config.keepalive = 60;
   config.buffer_size = MQTT_BUFFER_SIZE;
   config.out_buffer_size = MQTT_BUFFER_SIZE;
-  config.lwt_topic = cameraStatusTopic;
+  config.lwt_topic = MQTT_CAMERA_STATUS_TOPIC;
   config.lwt_msg = "offline";
   config.lwt_msg_len = 7;
   config.lwt_qos = 1;
@@ -193,7 +166,7 @@ void publishCameraFrame() {
   }
 
   int messageId = esp_mqtt_client_publish(
-      mqttClient, cameraFrameTopic,
+      mqttClient, MQTT_CAMERA_FRAME_TOPIC,
       reinterpret_cast<const char*>(frame->buf), frame->len, 0, 0);
   if (messageId < 0 &&
       millis() - lastCameraPublishLogAt >= 4000) {
@@ -230,7 +203,7 @@ void maintainWifi() {
       if (strlen(OTA_PASSWORD) < 12) {
         Serial.println("[OTA] Disabled: set OTA_PASSWORD to at least 12 characters and reflash.");
       } else {
-        ArduinoOTA.setHostname("esp32-rfid-cam");
+        ArduinoOTA.setHostname(OTA_HOSTNAME);
         ArduinoOTA.setPassword(OTA_PASSWORD);
         ArduinoOTA.onStart([]() {
           Serial.println("[OTA] Firmware update started.");
@@ -257,7 +230,7 @@ void maintainWifi() {
 
   wifiWasConnected = false;
   if (millis() - wifiAttemptStartedAt >= WIFI_RETRY_INTERVAL_MS) {
-    Serial.println("[WiFi] Connection timed out; retrying @Lhh.");
+    Serial.printf("[WiFi] Connection timed out; retrying %s.\n", WIFI_SSID);
     beginNextWifiAttempt();
   }
 }

@@ -176,7 +176,7 @@ The AI microservice performs local face detection and ArcFace feature extraction
    SERVER_PORT=8999
    DATABASE_HOST=127.0.0.1:27017
    DATABASE_QUERY=ESP32
-   MQTT_HOST=mqtt://10.174.100.95:1883
+   MQTT_HOST=mqtt://10.51.249.95:1883
    MQTT_TOPIC=esp32/rfid/data
    MQTT_CAMERA_FRAME_TOPIC=esp32/camera/frame
    MQTT_CAMERA_STATUS_TOPIC=esp32/camera/status
@@ -187,7 +187,7 @@ The AI microservice performs local face detection and ArcFace feature extraction
    FACE_RECOGNITION_MODEL=arcface_w600k_r50.onnx
    CAMERA_JPEG_QUALITY=40
    ```
-   `10.174.100.95` is the current IPv4 address of the PC running EMQX Edge.
+   `10.51.249.95` is the current IPv4 address of the PC running EMQX Edge.
    The WROOM and S3 firmware use this same broker address. If the PC receives a
    different address, update `MQTT_HOST` in `.env`, `MQTT_HOST` in
    `ESP32_WROOM_RFID/include/device_config.h`, and `mqttBrokerUri` in
@@ -198,7 +198,7 @@ The AI microservice performs local face detection and ArcFace feature extraction
   `nanomq.conf`. The TCP listener is `0.0.0.0:1883`.
 - Keep the PC and both ESP32 boards on the same Wi-Fi/LAN (`@Lhh`). Do not use
   `localhost` or `127.0.0.1` in ESP32 broker settings.
-- Reserve the PC address `10.174.100.95` in the router DHCP settings, or update
+- Reserve the PC address `10.51.249.95` in the router DHCP settings, or update
   all three broker settings if it changes.
 - Allow inbound TCP port `1883` for `emqx-edge.exe` in Windows Firewall on the
   active Wi-Fi profile. The current Wi-Fi profile is `Public`, and no explicit

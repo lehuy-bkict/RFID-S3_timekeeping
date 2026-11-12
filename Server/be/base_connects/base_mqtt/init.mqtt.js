@@ -8,7 +8,7 @@ const {
   handleCameraMessage
 } = require('./cameraFrames');
 
-const client = mqtt.connect(process.env.MQTT_HOST || 'mqtt://10.174.100.95:1883');
+const client = mqtt.connect(process.env.MQTT_HOST || 'mqtt://10.51.249.95:1883');
 const topic = process.env.MQTT_TOPIC || 'esp32/rfid/data';
 
 client.on('connect', () => {
