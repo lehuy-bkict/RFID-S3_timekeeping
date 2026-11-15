@@ -2,8 +2,10 @@
 
 const { getIO } = require('../base_socketIO/init.socket');
 
-const CAMERA_FRAME_TOPIC = process.env.MQTT_CAMERA_FRAME_TOPIC || 'esp32/camera/frame';
-const CAMERA_STATUS_TOPIC = process.env.MQTT_CAMERA_STATUS_TOPIC || 'esp32/camera/status';
+const CAMERA_FRAME_TOPIC = process.env.MQTT_CAMERA_FRAME_TOPIC || 'esp32/camera/ESP32_CAMERA_01/frame';
+const CAMERA_STATUS_TOPIC = process.env.MQTT_CAMERA_STATUS_TOPIC || 'esp32/camera/ESP32_CAMERA_01/status';
+const CAMERA_FRAME_TOPIC_PATTERN = process.env.MQTT_CAMERA_FRAME_TOPIC_PATTERN || 'esp32/camera/+/frame';
+const CAMERA_STATUS_TOPIC_PATTERN = process.env.MQTT_CAMERA_STATUS_TOPIC_PATTERN || 'esp32/camera/+/status';
 const configuredFrameAge = Number(process.env.CAMERA_FRAME_MAX_AGE_MS || 500);
 const MAX_CAMERA_FRAME_AGE_MS = Number.isFinite(configuredFrameAge) && configuredFrameAge > 0
   ? configuredFrameAge
@@ -23,7 +25,14 @@ function emitCameraStatusIfChanged() {
 }
 
 function handleCameraMessage(topic, message) {
-  if (topic === CAMERA_FRAME_TOPIC) {
+  const isFrameTopic = topic === CAMERA_FRAME_TOPIC ||
+    topic === 'esp32/camera/frame' ||
+    topic === CAMERA_FRAME_TOPIC_PATTERN.replace('/+/', '/');
+  const isStatusTopic = topic === CAMERA_STATUS_TOPIC ||
+    topic === 'esp32/camera/status' ||
+    topic === CAMERA_STATUS_TOPIC_PATTERN.replace('/+/', '/');
+
+  if (isFrameTopic || (topic.startsWith('esp32/camera/') && topic.endsWith('/frame'))) {
     if (message.length < 4 || message[0] !== 0xff || message[1] !== 0xd8) {
       console.warn('[Camera MQTT] Ignored an invalid JPEG frame.');
       return;
@@ -41,7 +50,7 @@ function handleCameraMessage(topic, message) {
     return;
   }
 
-  if (topic === CAMERA_STATUS_TOPIC) {
+  if (isStatusTopic || (topic.startsWith('esp32/camera/') && topic.endsWith('/status'))) {
     const status = message.toString();
     if (status !== 'online' && status !== 'offline') {
       console.warn(`[Camera MQTT] Ignored invalid camera status: ${status}`);
@@ -100,6 +109,8 @@ cameraStatusInterval.unref();
 module.exports = {
   CAMERA_FRAME_TOPIC,
   CAMERA_STATUS_TOPIC,
+  CAMERA_FRAME_TOPIC_PATTERN,
+  CAMERA_STATUS_TOPIC_PATTERN,
   handleCameraMessage,
   getCameraStatus,
   getLatestCameraFrame,

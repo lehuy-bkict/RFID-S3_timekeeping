@@ -5,19 +5,27 @@ require('dotenv').config();
 const {
   CAMERA_FRAME_TOPIC,
   CAMERA_STATUS_TOPIC,
+  CAMERA_FRAME_TOPIC_PATTERN,
+  CAMERA_STATUS_TOPIC_PATTERN,
   handleCameraMessage
 } = require('./cameraFrames');
 
-const client = mqtt.connect(process.env.MQTT_HOST || 'mqtt://10.51.249.95:1883');
+const client = mqtt.connect(process.env.MQTT_HOST || 'mqtt://10.160.110.95:1883');
 const topic = process.env.MQTT_TOPIC || 'esp32/rfid/data';
+const cameraTopics = [
+  CAMERA_FRAME_TOPIC,
+  CAMERA_STATUS_TOPIC,
+  CAMERA_FRAME_TOPIC_PATTERN,
+  CAMERA_STATUS_TOPIC_PATTERN
+].filter((value, index, values) => values.indexOf(value) === index);
 
 client.on('connect', () => {
   console.log('Connected to MQTT broker');
-  client.subscribe([topic, CAMERA_FRAME_TOPIC, CAMERA_STATUS_TOPIC], (err) => {
+  client.subscribe([topic, ...cameraTopics], (err) => {
     if (err) {
       console.error('Failed to subscribe to topic:', err.message);
     } else {
-      console.log(`Subscribed to MQTT topics: ${topic}, ${CAMERA_FRAME_TOPIC}, ${CAMERA_STATUS_TOPIC}`);
+      console.log(`Subscribed to MQTT topics: ${[topic, ...cameraTopics].join(', ')}`);
     }
   });
 });

@@ -83,11 +83,21 @@ const LiveCamera = () => {
       if (!frameData) return;
       const binaryFrame = frameData?.type === 'Buffer' && Array.isArray(frameData.data)
         ? new Uint8Array(frameData.data)
-        : frameData;
+        : frameData instanceof ArrayBuffer
+          ? new Uint8Array(frameData)
+          : frameData instanceof Uint8Array
+            ? frameData
+            : frameData?.data instanceof Uint8Array
+              ? frameData.data
+              : frameData?.data && Array.isArray(frameData.data)
+                ? new Uint8Array(frameData.data)
+                : null;
+      if (!binaryFrame || binaryFrame.length < 2 ||
+        binaryFrame[0] !== 0xff || binaryFrame[1] !== 0xd8) {
+        return;
+      }
       const frameUrl = URL.createObjectURL(
-        binaryFrame instanceof Blob
-          ? binaryFrame
-          : new Blob([binaryFrame], { type: 'image/jpeg' })
+        new Blob([binaryFrame], { type: 'image/jpeg' })
       );
       if (esp32FrameUrlRef.current) {
         URL.revokeObjectURL(esp32FrameUrlRef.current);
