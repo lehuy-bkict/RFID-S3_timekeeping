@@ -25,7 +25,7 @@ flowchart TD
     end
 
     subgraph Communication ["Message Broker"]
-        WROOM -->|MQTT Publish: esp32/rfid/data| Broker["MQTT Broker (HiveMQ / Mosquitto)"]
+        WROOM -->|MQTT Publish: esp32/rfid/data| Broker["MQTT Broker (MQTT Local)"]
         Broker -->|MQTT Subscribe: esp32/camera/frame| NodeServer
     end
 
