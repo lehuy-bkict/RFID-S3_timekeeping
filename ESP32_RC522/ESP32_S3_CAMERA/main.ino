@@ -13,7 +13,7 @@
 #define MQTT_STATUS_TOPIC "esp32/camera/" MQTT_DEVICE_ID "/status"
 
 #define MQTT_BUFFER_SIZE (8 * 1024)  // Đệm 8KB cho cơ chế stream chunked
-#define SOFTWARE_JPEG_QUALITY 65     // Ảnh VGA 640x480 rõ nét mặt (~40-50KB)
+#define SOFTWARE_JPEG_QUALITY 65     // Nét rõ khuôn mặt
 #define FRAME_INTERVAL_MS 200        // ~4-5 FPS
 #define WIFI_RETRY_INTERVAL_MS 5000
 #define MQTT_RETRY_INTERVAL_MS 3000
@@ -94,8 +94,9 @@ bool initializeCamera() {
   config.pin_reset = CAMERA_PIN_RESET;
   config.xclk_freq_hz = 20000000;
 
-  config.pixel_format = PIXFORMAT_RGB565;
-  config.frame_size = FRAMESIZE_VGA; // 640x480
+  // SỬA TỪ RGB565 SANG YUV422 ĐỂ KHẮC PHỤC LỖI ÁM MÀU SAI HỆ MÀU TRÊN GC2145
+  config.pixel_format = PIXFORMAT_YUV422; 
+  config.frame_size = FRAMESIZE_VGA; 
   config.jpeg_quality = 12;
   config.fb_count = 2;
   config.fb_location = CAMERA_FB_IN_PSRAM;
@@ -134,17 +135,17 @@ void publishFrame() {
   esp_camera_fb_return(frame);
   lastFrameAt = millis();
 
-  if (!converted || jpegBuffer == nullptr || jpegLength == 0) {
+  if (!converted || jpegBuffer == nullptr || jpegLength < 4) {
     if (jpegBuffer != nullptr) free(jpegBuffer);
     return;
   }
 
-  // Đẩy thẳng byte JPEG lên MQTT (vượt giới hạn 64KB của PubSubClient)
   bool ok = mqtt.beginPublish(MQTT_FRAME_TOPIC, jpegLength, false);
   if (ok) {
+    const size_t chunkSize = 4096;
     size_t sent = 0;
     while (sent < jpegLength) {
-      size_t toSend = min((size_t)4096, jpegLength - sent);
+      size_t toSend = min(chunkSize, jpegLength - sent);
       size_t written = mqtt.write(jpegBuffer + sent, toSend);
       if (written == 0) {
         ok = false;
